@@ -1,28 +1,29 @@
-/* Використовуємо вбудований модуль */
 const {createServer} = require("node:http");
+const storage = require("./storage");
+const config = require("./config");
 
-// Тув ваш варіант даних, залежно від варіанта.
-let MENU = [
-    {
-        id: 1,
-        name: "Піца Гуцульська",
-        category: "Піца",
-        price: 250,
-        available: true,
-    },
-    {
-        id: 2, name: "Борщ", category: "Супи", price: 120,
-        available: true
-    },
-    {
-        id: 3, name: "Чизкейк", category: "Десерти", price: 150,
-        available: false
-    },
-];
-
-// Читаємо налаштування з .env (використовуємо значення за замовчуванням, якщо .env відсутній)
-const PORT = process.env.PORT || 3000;
-const HOSTNAME = process.env.HOSTNAME || "localhost";
+const readBody = (req) => {
+    return new Promise((resolve, reject) => {
+        let body = "";
+        req.on("data", (chunk) => {
+            try {
+                body += chunk.toString();
+            } catch (err) {
+                reject(err);
+            }
+        });
+        req.on("end", () => {
+            try {
+                resolve(JSON.parse(body));
+            } catch (err) {
+                reject(err);
+            }
+        });
+        req.on("error", (err) => {
+            reject(err);
+        });
+    });
+}
 
 // створюємо сервер, там усі наші методи POST,GET,PATCH, DELETE
 const server = createServer((req, res) => {
@@ -31,100 +32,90 @@ const server = createServer((req, res) => {
     const pathname = parsedUrl.pathname;
     res.setHeader("Content-Type", "application/json;charset=utf-8");
 
-    // --- GET: Список страв з фільтрацією по query param 'category'
-    if (method === "GET" && pathname === "/menu") {
-        const category = parsedUrl.searchParams.get("category");
-        let results = [...MENU];
-        if (category) {
-            results = results.filter(
-                (dish) => dish.category.toLowerCase() ===
-                    category.toLowerCase(),
-            );
+    // --- GET: Список з фільтрацією по query param 'room'
+    if (method === "GET" && pathname === "/device") {
+        let results = [];
+        const roomFilter = parsedUrl.searchParams.get("room");
+        if (roomFilter) {
+            results = storage.fetch((e) => e.room.toLowerCase() === roomFilter.toLowerCase());
+        } else {
+            results = storage.fetch();
         }
+
         res.statusCode = 200;
         return res.end(
             JSON.stringify({
-                count: results.length,
-                items: results,
+                data: results,
+                total: results.length,
             }),
         );
     }
 
     // --- POST: Додавання страви ---
-    if (method === "POST" && pathname === "/menu") {
-        let body = "";
-        req.on("data", (chunk) => {
-            body += chunk.toString();
-        });
-        req.on("end", () => {
+    if (method === "POST" && pathname === "/device") {
+        readBody(req)
+            .then((data) => {
             try {
-                const data = JSON.parse(body);
-                if (!data.name || !data.price) {
-                    res.statusCode = 400;
-                    return res.end(
-                        JSON.stringify({error: "Name and Price are required"}));
-                }
-                const lastId = MENU.length > 0 ? MENU[MENU.length -
-                1].id : 0;
-                const nextId = lastId + 1;
-                const dishToSave = {
-                    id: nextId,
-                    name: data.name,
-                    category: data.category || "Інше",
-                    price: data.price,
-                    available: data.available !== undefined ?
-                        data.available : true,
-                };
-                MENU.push(dishToSave);
+                const instance = storage.add(data)
+
                 res.statusCode = 201;
-                res.end(JSON.stringify({
-                    message: "Created", dish:
-                    dishToSave
-                }));
+                res.end(JSON.stringify({data: instance}));
             } catch (err) {
-                res.statusCode = 400;
-                res.end(JSON.stringify({error: "Invalid JSON"}));
+                res.statusCode = 422;
+                res.end(JSON.stringify({error: err.message}));
             }
-        });
+        })
+            .catch((err) => {
+                res.statusCode = 400;
+                res.end(JSON.stringify({error: err.message}));
+            });
+
         return;
     }
 
     // --- PATCH: Оновлення страви (наприклад, ціни) ---
-    if (method === "PATCH" && pathname.startsWith("/menu/")) {
+    if (method === "PATCH" && pathname.startsWith("/device/")) {
         const id = parseInt(pathname.split("/")[2]);
-        let body = "";
-        req.on("data", (chunk) => {
-            body += chunk.toString();
-        });
-        req.on("end", () => {
-            const index = MENU.findIndex((d) => d.id === id);
-            if (index !== -1) {
-                const updates = JSON.parse(body);
-                MENU[index] = {...MENU[index], ...updates};
-                res.statusCode = 200;
-                res.end(JSON.stringify({
-                    message: "Updated", dish:
-                        MENU[index]
-                }));
-            } else {
-                res.statusCode = 404;
-                res.end(JSON.stringify({error: "Not Found"}));
-            }
-        });
+
+        readBody(req)
+            .then((updates) => {
+                try {
+                    const updated = storage.update(id, updates);
+                    if (updated) {
+                        res.statusCode = 200;
+                        res.end(JSON.stringify({data: updated}));
+                    } else {
+                        res.statusCode = 404;
+                        res.end(JSON.stringify({error: "Not Found"}));
+                    }
+                } catch (err) {
+                    res.statusCode = 422;
+                    res.end(JSON.stringify({error: err.message}));
+                }
+            })
+            .catch((err) => {
+                res.statusCode = 400;
+                res.end(JSON.stringify({error: err.message}));
+            });
+
         return;
     }
 
     // --- DELETE: Видалення страви ---
-    if (method === "DELETE" && pathname.startsWith("/menu/")) {
+    if (method === "DELETE" && pathname.startsWith("/device/")) {
         const id = parseInt(pathname.split("/")[2]);
-        const originalLength = MENU.length;
-        MENU = MENU.filter((dish) => dish.id !== id);
-        if (MENU.length < originalLength) {
-            res.statusCode = 200;
-            res.end(JSON.stringify({message: "Deleted"}));
-        } else {
-            res.statusCode = 404;
-            res.end(JSON.stringify({error: "Not Found"}));
+        try {
+            const removed = storage.remove(id);
+            if (removed === true) {
+                res.statusCode = 204;
+                res.end();
+            } else {
+                res.statusCode = 404;
+                res.end(JSON.stringify({error: "Not Found"}));
+            }
+        } catch (err) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({error: err.message}));
         }
         return;
     }
@@ -135,6 +126,6 @@ const server = createServer((req, res) => {
 });
 
 // Ми повинні вивести логи що сервер успішно запустився.
-server.listen(PORT, HOSTNAME, () => {
-    console.log(`Server running at http://${HOSTNAME}:${PORT}/`);
+server.listen(config.port, config.host, () => {
+    console.log(`Server running at http://${config.host}:${config.port}/`);
 });
