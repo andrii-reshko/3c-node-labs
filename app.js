@@ -1,6 +1,7 @@
 const {createServer} = require("node:http");
 const storage = require("./storage");
 const config = require("./config");
+const {requestLogger, logger} = require("./logger");
 
 const readBody = (req) => {
     return new Promise((resolve, reject) => {
@@ -25,14 +26,30 @@ const readBody = (req) => {
     });
 }
 
-// створюємо сервер, там усі наші методи POST,GET,PATCH, DELETE
 const server = createServer((req, res) => {
+    // log each request
+    requestLogger(req, res);
+
+    const schema = req.headers["x-forwarded-proto"] || "http";
+    const host = req.headers.host;
     const method = req.method;
-    const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+    const parsedUrl = new URL(req.url, `${schema}://${host}`);
     const pathname = parsedUrl.pathname;
     res.setHeader("Content-Type", "application/json;charset=utf-8");
 
-    // --- GET: Список з фільтрацією по query param 'room'
+    // health check endpoint
+    if (method === "GET" && pathname === "/health") {
+        res.statusCode = 200;
+        return res.end(JSON.stringify({
+            pid: process.pid,
+            nodeVersion: process.version,
+            platform: process.platform,
+            uptime: process.uptime(),
+            memoryUsage: process.memoryUsage(),
+        }));
+    }
+
+    // list devices
     if (method === "GET" && pathname === "/device") {
         let results = [];
         const roomFilter = parsedUrl.searchParams.get("room");
@@ -51,20 +68,20 @@ const server = createServer((req, res) => {
         );
     }
 
-    // --- POST: Додавання страви ---
+    // add a new device
     if (method === "POST" && pathname === "/device") {
         readBody(req)
             .then((data) => {
-            try {
-                const instance = storage.add(data)
+                try {
+                    const instance = storage.add(data)
 
-                res.statusCode = 201;
-                res.end(JSON.stringify({data: instance}));
-            } catch (err) {
-                res.statusCode = 422;
-                res.end(JSON.stringify({error: err.message}));
-            }
-        })
+                    res.statusCode = 201;
+                    res.end(JSON.stringify({data: instance}));
+                } catch (err) {
+                    res.statusCode = 422;
+                    res.end(JSON.stringify({error: err.message}));
+                }
+            })
             .catch((err) => {
                 res.statusCode = 400;
                 res.end(JSON.stringify({error: err.message}));
@@ -73,7 +90,7 @@ const server = createServer((req, res) => {
         return;
     }
 
-    // --- PATCH: Оновлення страви (наприклад, ціни) ---
+    // update a device by id
     if (method === "PATCH" && pathname.startsWith("/device/")) {
         const id = parseInt(pathname.split("/")[2]);
 
@@ -101,7 +118,7 @@ const server = createServer((req, res) => {
         return;
     }
 
-    // --- DELETE: Видалення страви ---
+    // delete a device by id
     if (method === "DELETE" && pathname.startsWith("/device/")) {
         const id = parseInt(pathname.split("/")[2]);
         try {
@@ -125,7 +142,42 @@ const server = createServer((req, res) => {
     res.end(JSON.stringify({error: "Route not found"}));
 });
 
-// Ми повинні вивести логи що сервер успішно запустився.
 server.listen(config.port, config.host, () => {
-    console.log(`Server running at http://${config.host}:${config.port}/`);
+    logger.info(`Server running at http://${config.host}:${config.port}/`);
+});
+
+// --- Graceful Shutdown Implementation ---
+// Added for Lab 2 to handle system signals and ensure a clean exit.
+const gracefulShutdown = (signal) => {
+    logger.info(`${signal} received. shutting down gracefully`);
+    server.close((err) => {
+        if (err) {
+            logger.error(`${err.message}`);
+            process.exit(1);
+        }
+        logger.info('Server closed');
+        process.exit(0);
+    });
+
+    // force shutdown by timeout
+    setTimeout(() => {
+        logger.error('Forcefully shutting down');
+        process.exit(1);
+    }, 5000);
+};
+
+// Handle termination signals
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+// Handle global uncaught exceptions
+process.on('uncaughtException', (err, origin) => {
+    logger.error(`Uncaught at ${origin}, error: ${err.stack || err}`);
+    gracefulShutdown('uncaughtException');
+});
+
+// Handle global unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    logger.error(`rejection at ${promise}, reason: ${reason.stack || reason}`);
+    gracefulShutdown('unhandledRejection');
 });
