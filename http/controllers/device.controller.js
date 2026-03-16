@@ -1,4 +1,5 @@
 import * as deviceService from '../../services/device.service.js';
+import MESSAGES from '../../constants/messages.js';
 
 const list = (request, reply) => {
   const roomFilter = request.query.room;
@@ -17,7 +18,7 @@ const create = (request, reply) => {
     const instance = deviceService.create(data);
     reply.code(201).send({ data: instance });
   } catch (err) {
-    reply.code(422).send({ error: err.message });
+    reply.unprocessableEntity(err.message);
   }
 };
 
@@ -30,10 +31,10 @@ const update = (request, reply) => {
     if (updated) {
       reply.send({ data: updated });
     } else {
-      reply.code(404).send({ error: 'Not Found' });
+      reply.notFound(MESSAGES.DEVICE_NOT_FOUND);
     }
   } catch (err) {
-    reply.code(422).send({ error: err.message });
+    reply.unprocessableEntity(err.message);
   }
 };
 
@@ -44,10 +45,10 @@ const remove = (request, reply) => {
     if (removed === true) {
       reply.code(204).send();
     } else {
-      reply.code(404).send({ error: 'Not Found' });
+      reply.notFound(MESSAGES.DEVICE_NOT_FOUND);
     }
   } catch (err) {
-    reply.code(400).send({ error: err.message });
+    reply.badRequest(err.message);
   }
 };
 

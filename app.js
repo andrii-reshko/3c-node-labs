@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import sensible from '@fastify/sensible';
 import env from './plugins/env.js';
 import router from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
@@ -20,6 +21,7 @@ const fastify = Fastify({
 });
 
 await fastify.register(env);
+fastify.register(sensible);
 fastify.setErrorHandler(errorHandler);
 fastify.register(router);
 
