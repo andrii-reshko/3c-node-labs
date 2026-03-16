@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import env from './plugins/env.js';
 import router from './http/routes/index.js';
+import { errorHandler } from './utils/errorHandler.js';
 
 // eslint-disable-next-line no-process-env
 const isDev = process.env.NODE_ENV === 'development';
@@ -19,6 +20,7 @@ const fastify = Fastify({
 });
 
 await fastify.register(env);
+fastify.setErrorHandler(errorHandler);
 fastify.register(router);
 
 // Log server closure
