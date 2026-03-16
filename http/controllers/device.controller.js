@@ -1,6 +1,5 @@
 import Ajv from 'ajv';
 import * as deviceService from '../../services/device.service.js';
-import { readBody, responseJson } from '../../utils/http-utils.js';
 
 const ajv = new Ajv();
 
@@ -30,73 +29,64 @@ const deviceUpdateSchema = {
 
 const validateDeviceUpdate = ajv.compile(deviceUpdateSchema);
 
-const list = (req, res, url) => {
-  const roomFilter = url.searchParams.get('room');
+const list = (request, reply) => {
+  const roomFilter = request.query.room;
   const results = deviceService.getAll(roomFilter);
 
-  responseJson(res, 200, {
+  reply.send({
     data: results,
     total: results.length,
   });
 };
 
-const create = (req, res) => {
-  readBody(req)
-    .then((data) => {
-      if (!validateDevice(data)) {
-        responseJson(res, 400, { error: validateDevice.errors });
-        return;
-      }
+const create = (request, reply) => {
+  const data = request.body;
 
-      try {
-        const instance = deviceService.create(data);
-        responseJson(res, 201, { data: instance });
-      } catch (err) {
-        responseJson(res, 422, { error: err.message });
-      }
-    })
-    .catch((err) => {
-      responseJson(res, 400, { error: err.message });
-    });
+  if (!validateDevice(data)) {
+    reply.code(400).send({ error: validateDevice.errors });
+    return;
+  }
+
+  try {
+    const instance = deviceService.create(data);
+    reply.code(201).send({ data: instance });
+  } catch (err) {
+    reply.code(422).send({ error: err.message });
+  }
 };
 
-const update = (req, res, url) => {
-  const id = parseInt(url.pathname.split('/')[2]);
+const update = (request, reply) => {
+  const id = parseInt(request.params.id);
+  const updates = request.body;
 
-  readBody(req)
-    .then((updates) => {
-      if (!validateDeviceUpdate(updates)) {
-        responseJson(res, 400, { error: validateDeviceUpdate.errors });
-        return;
-      }
+  if (!validateDeviceUpdate(updates)) {
+    reply.code(400).send({ error: validateDeviceUpdate.errors });
+    return;
+  }
 
-      try {
-        const updated = deviceService.update(id, updates);
-        if (updated) {
-          responseJson(res, 200, { data: updated });
-        } else {
-          responseJson(res, 404, { error: 'Not Found' });
-        }
-      } catch (err) {
-        responseJson(res, 422, { error: err.message });
-      }
-    })
-    .catch((err) => {
-      responseJson(res, 400, { error: err.message });
-    });
+  try {
+    const updated = deviceService.update(id, updates);
+    if (updated) {
+      reply.send({ data: updated });
+    } else {
+      reply.code(404).send({ error: 'Not Found' });
+    }
+  } catch (err) {
+    reply.code(422).send({ error: err.message });
+  }
 };
 
-const remove = (req, res, url) => {
-  const id = parseInt(url.pathname.split('/')[2]);
+const remove = (request, reply) => {
+  const id = parseInt(request.params.id);
   try {
     const removed = deviceService.remove(id);
     if (removed === true) {
-      responseJson(res, 204);
+      reply.code(204).send();
     } else {
-      responseJson(res, 404, { error: 'Not Found' });
+      reply.code(404).send({ error: 'Not Found' });
     }
   } catch (err) {
-    responseJson(res, 400, { error: err.message });
+    reply.code(400).send({ error: err.message });
   }
 };
 

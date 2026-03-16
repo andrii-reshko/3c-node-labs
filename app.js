@@ -1,29 +1,40 @@
-import { createServer } from 'node:http';
+import Fastify from 'fastify';
 import config from './config/env.js';
 import router from './http/routes/index.js';
-import { requestLogger, logger } from './utils/logger.js';
+import { logger } from './utils/logger.js';
 
-const server = createServer((req, res) => {
-  // log each request
-  requestLogger(req, res);
-  router(req, res);
+const fastify = Fastify({
+  logger: true,
 });
 
-server.listen(config.port, config.host, () => {
-  logger.info(`Server running at http://${config.host}:${config.port}/`);
+fastify.register(router);
+
+// Log server closure
+fastify.addHook('onClose', (instance, done) => {
+  logger.info('Server closed');
+  done();
 });
 
-// --- Graceful Shutdown Implementation ---
+fastify.listen({ port: config.port, host: config.host }, (err, address) => {
+  if (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+  logger.info(`Server running at ${address}`);
+});
+
+// Graceful Shutdown
 const gracefulShutdown = (signal) => {
   logger.info(`${signal} received. shutting down gracefully`);
-  server.close((err) => {
-    if (err) {
+  fastify
+    .close()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((err) => {
       logger.error(`${err.message}`);
       process.exit(1);
-    }
-    logger.info('Server closed');
-    process.exit(0);
-  });
+    });
 
   // force shutdown by timeout
   setTimeout(() => {

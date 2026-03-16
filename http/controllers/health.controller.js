@@ -1,7 +1,5 @@
-import { responseJson } from '../../utils/http-utils.js';
-
-const check = (req, res) => {
-  responseJson(res, 200, {
+const check = (request, reply) => {
+  reply.send({
     pid: process.pid,
     nodeVersion: process.version,
     platform: process.platform,
