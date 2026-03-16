@@ -1,6 +1,10 @@
 const check = (request, reply) => {
-  // Task 6 – simulate an error for testing setErrorHandler
-  // throw new Error();
+  reply.send({
+    status: 'ok',
+  });
+};
+
+const details = (request, reply) => {
   reply.send({
     pid: process.pid,
     nodeVersion: process.version,
@@ -10,4 +14,4 @@ const check = (request, reply) => {
   });
 };
 
-export { check };
+export { check, details };

@@ -3,7 +3,7 @@ import fastifyEnv from '@fastify/env';
 
 const schema = {
   type: 'object',
-  required: ['PORT', 'HOSTNAME', 'NODE_ENV'],
+  required: ['PORT', 'HOSTNAME', 'NODE_ENV', 'ADMIN_API_KEY'],
   properties: {
     PORT: {
       type: 'integer',
@@ -17,6 +17,10 @@ const schema = {
     NODE_ENV: {
       type: 'string',
       enum: ['development', 'production'],
+    },
+    ADMIN_API_KEY: {
+      type: 'string',
+      minLength: 1,
     },
   },
 };

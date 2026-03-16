@@ -1,6 +1,9 @@
 import * as deviceController from '../controllers/device.controller.js';
 import * as healthController from '../controllers/health.controller.js';
-import healthSchema from '../../schemas/health.schema.js';
+import {
+  healthSchema,
+  healthDetailsSchema,
+} from '../../schemas/health.schema.js';
 import {
   listDeviceSchema,
   createDeviceSchema,
@@ -10,6 +13,19 @@ import {
 
 const router = async (fastify) => {
   fastify.get('/health', { schema: healthSchema }, healthController.check);
+  fastify.get(
+    '/health/details',
+    {
+      schema: healthDetailsSchema,
+      onRequest: async (request, reply) => {
+        const apiKey = request.headers['x-api-key'];
+        if (apiKey !== fastify.config.ADMIN_API_KEY) {
+          reply.unauthorized('Invalid API Key');
+        }
+      },
+    },
+    healthController.details,
+  );
   fastify.get('/device', { schema: listDeviceSchema }, deviceController.list);
   fastify.post(
     '/device',

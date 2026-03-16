@@ -3,6 +3,17 @@ const healthSchema = {
     200: {
       type: 'object',
       properties: {
+        status: { type: 'string' },
+      },
+    },
+  },
+};
+
+const healthDetailsSchema = {
+  response: {
+    200: {
+      type: 'object',
+      properties: {
         pid: { type: 'integer' },
         nodeVersion: { type: 'string' },
         platform: { type: 'string' },
@@ -22,4 +33,4 @@ const healthSchema = {
   },
 };
 
-export default healthSchema;
+export { healthSchema, healthDetailsSchema };
