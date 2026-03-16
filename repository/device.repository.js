@@ -1,4 +1,4 @@
-const Device = require('../domain/device.entity');
+import Device from '../domain/device.entity.js';
 
 // In memory storage for the Smart home devices.
 // Example: data [{ "id": 1, "device": "Smart Lamp", "status": "on", "room": "Kitchen" }]
@@ -63,4 +63,4 @@ class Storage {
 // Export a singleton instance of Storage
 const storage = new Storage();
 
-module.exports = storage;
+export default storage;

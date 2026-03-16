@@ -1,6 +1,6 @@
-const { URL } = require('node:url');
-const deviceController = require('../controllers/device.controller');
-const healthController = require('../controllers/health.controller');
+import { URL } from 'node:url';
+import * as deviceController from '../controllers/device.controller.js';
+import * as healthController from '../controllers/health.controller.js';
 
 const router = (req, res) => {
   const schema = req.headers['x-forwarded-proto'] || 'http';
@@ -35,4 +35,4 @@ const router = (req, res) => {
   res.end(JSON.stringify({ error: 'Route not found' }));
 };
 
-module.exports = router;
+export default router;

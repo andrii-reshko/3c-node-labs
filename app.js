@@ -1,7 +1,7 @@
-const { createServer } = require('node:http');
-const config = require('./config/env');
-const router = require('./http/routes');
-const { requestLogger, logger } = require('./utils/logger');
+import { createServer } from 'node:http';
+import config from './config/env.js';
+import router from './http/routes/index.js';
+import { requestLogger, logger } from './utils/logger.js';
 
 const server = createServer((req, res) => {
   // log each request

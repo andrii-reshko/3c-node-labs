@@ -21,4 +21,4 @@ const readBody = (req) => {
   });
 };
 
-module.exports = { readBody };
+export { readBody };

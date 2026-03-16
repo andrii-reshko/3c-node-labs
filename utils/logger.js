@@ -1,4 +1,4 @@
-const config = require('../config/env');
+import config from '../config/env.js';
 
 const log = (level, method, url, statusCode, message = '') => {
   const timestamp = new Date().toISOString();
@@ -30,7 +30,4 @@ const logger = {
     console.error(`${new Date().toISOString()} | ERROR | ${message}`),
 };
 
-module.exports = {
-  requestLogger,
-  logger,
-};
+export { requestLogger, logger };

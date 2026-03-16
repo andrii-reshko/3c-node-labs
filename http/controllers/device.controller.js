@@ -1,6 +1,6 @@
-const Ajv = require('ajv');
-const deviceService = require('../../services/device.service');
-const { readBody } = require('../../utils/http-utils');
+import Ajv from 'ajv';
+import * as deviceService from '../../services/device.service.js';
+import { readBody } from '../../utils/http-utils.js';
 
 const ajv = new Ajv();
 
@@ -116,9 +116,4 @@ const remove = (req, res, url) => {
   }
 };
 
-module.exports = {
-  list,
-  create,
-  update,
-  remove,
-};
+export { list, create, update, remove };

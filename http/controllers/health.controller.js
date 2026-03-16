@@ -11,6 +11,4 @@ const check = (req, res) => {
   );
 };
 
-module.exports = {
-  check,
-};
+export { check };

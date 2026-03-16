@@ -1,4 +1,5 @@
-const Ajv = require('ajv');
+import Ajv from 'ajv';
+
 const ajv = new Ajv({ allErrors: true });
 
 const { PORT, HOSTNAME, NODE_ENV } = process.env;
@@ -29,4 +30,4 @@ if (!valid) {
   process.exit(1);
 }
 
-module.exports = config;
+export default config;

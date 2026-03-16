@@ -1,5 +1,5 @@
-const storage = require('../repository/device.repository');
-const Device = require('../domain/device.entity');
+import storage from '../repository/device.repository.js';
+import Device from '../domain/device.entity.js';
 
 const getAll = (filter) => {
   if (filter) {
@@ -34,9 +34,4 @@ const remove = (id) => {
   return storage.remove(id);
 };
 
-module.exports = {
-  getAll,
-  create,
-  update,
-  remove,
-};
+export { getAll, create, update, remove };

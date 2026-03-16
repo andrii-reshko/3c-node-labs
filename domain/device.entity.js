@@ -24,4 +24,4 @@ class Device {
   }
 }
 
-module.exports = Device;
+export default Device;
