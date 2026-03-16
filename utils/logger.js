@@ -1,4 +1,4 @@
-const config = require('./config');
+const config = require('../config/env');
 
 const log = (level, method, url, statusCode, message = '') => {
   const timestamp = new Date().toISOString();

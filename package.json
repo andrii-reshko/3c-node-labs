@@ -6,8 +6,8 @@
   "scripts": {
     "serve": "node --env-file=.env app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "dev": "node --watch app.js",
+    "start": "node --env-file=.env app.js",
+    "dev": "node --watch --env-file=.env app.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
