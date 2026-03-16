@@ -1,33 +1,4 @@
-import Ajv from 'ajv';
 import * as deviceService from '../../services/device.service.js';
-
-const ajv = new Ajv();
-
-const deviceSchema = {
-  type: 'object',
-  properties: {
-    device: { type: 'string' },
-    status: { type: 'string' },
-    room: { type: 'string' },
-  },
-  required: ['device', 'status', 'room'],
-  additionalProperties: false,
-};
-
-const validateDevice = ajv.compile(deviceSchema);
-
-const deviceUpdateSchema = {
-  type: 'object',
-  properties: {
-    device: { type: 'string' },
-    status: { type: 'string' },
-    room: { type: 'string' },
-  },
-  additionalProperties: false,
-  minProperties: 1,
-};
-
-const validateDeviceUpdate = ajv.compile(deviceUpdateSchema);
 
 const list = (request, reply) => {
   const roomFilter = request.query.room;
@@ -42,11 +13,6 @@ const list = (request, reply) => {
 const create = (request, reply) => {
   const data = request.body;
 
-  if (!validateDevice(data)) {
-    reply.code(400).send({ error: validateDevice.errors });
-    return;
-  }
-
   try {
     const instance = deviceService.create(data);
     reply.code(201).send({ data: instance });
@@ -56,13 +22,8 @@ const create = (request, reply) => {
 };
 
 const update = (request, reply) => {
-  const id = parseInt(request.params.id);
+  const id = request.params.id; // Fastify coerces this to number based on schema
   const updates = request.body;
-
-  if (!validateDeviceUpdate(updates)) {
-    reply.code(400).send({ error: validateDeviceUpdate.errors });
-    return;
-  }
 
   try {
     const updated = deviceService.update(id, updates);
@@ -77,7 +38,7 @@ const update = (request, reply) => {
 };
 
 const remove = (request, reply) => {
-  const id = parseInt(request.params.id);
+  const id = request.params.id;
   try {
     const removed = deviceService.remove(id);
     if (removed === true) {
