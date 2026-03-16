@@ -1,8 +1,33 @@
 const { createServer } = require('node:http');
 const { URL } = require('node:url');
+const Ajv = require('ajv');
 const storage = require('./storage');
 const config = require('./config');
 const { requestLogger, logger } = require('./logger');
+
+const ajv = new Ajv();
+
+const validateDevice = ajv.compile({
+  type: 'object',
+  properties: {
+    device: { type: 'string' },
+    status: { type: 'string' },
+    room: { type: 'string' },
+  },
+  required: ['device', 'status', 'room'],
+  additionalProperties: false,
+});
+
+const validateDeviceUpdate = ajv.compile({
+  type: 'object',
+  properties: {
+    device: { type: 'string' },
+    status: { type: 'string' },
+    room: { type: 'string' },
+  },
+  additionalProperties: false,
+  minProperties: 1,
+});
 
 const readBody = (req) => {
   return new Promise((resolve, reject) => {
@@ -72,6 +97,12 @@ const server = createServer((req, res) => {
   if (method === 'POST' && pathname === '/device') {
     readBody(req)
       .then((data) => {
+        if (!validateDevice(data)) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: validateDevice.errors }));
+          return;
+        }
+
         try {
           const instance = storage.add(data);
 
@@ -96,6 +127,12 @@ const server = createServer((req, res) => {
 
     readBody(req)
       .then((updates) => {
+        if (!validateDeviceUpdate(updates)) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: validateDeviceUpdate.errors }));
+          return;
+        }
+
         try {
           const updated = storage.update(id, updates);
           if (updated) {
