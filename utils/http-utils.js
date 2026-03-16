@@ -21,4 +21,14 @@ const readBody = (req) => {
   });
 };
 
-export { readBody };
+const responseJson = (res, statusCode, data) => {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json;charset=utf-8');
+  if (data !== undefined) {
+    res.end(JSON.stringify(data));
+  } else {
+    res.end();
+  }
+};
+
+export { readBody, responseJson };

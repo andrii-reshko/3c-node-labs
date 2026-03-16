@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import * as deviceService from '../../services/device.service.js';
-import { readBody } from '../../utils/http-utils.js';
+import { readBody, responseJson } from '../../utils/http-utils.js';
 
 const ajv = new Ajv();
 
@@ -34,37 +34,29 @@ const list = (req, res, url) => {
   const roomFilter = url.searchParams.get('room');
   const results = deviceService.getAll(roomFilter);
 
-  res.statusCode = 200;
-  res.end(
-    JSON.stringify({
-      data: results,
-      total: results.length,
-    }),
-  );
+  responseJson(res, 200, {
+    data: results,
+    total: results.length,
+  });
 };
 
 const create = (req, res) => {
   readBody(req)
     .then((data) => {
       if (!validateDevice(data)) {
-        res.statusCode = 400;
-        res.end(JSON.stringify({ error: validateDevice.errors }));
+        responseJson(res, 400, { error: validateDevice.errors });
         return;
       }
 
       try {
         const instance = deviceService.create(data);
-
-        res.statusCode = 201;
-        res.end(JSON.stringify({ data: instance }));
+        responseJson(res, 201, { data: instance });
       } catch (err) {
-        res.statusCode = 422;
-        res.end(JSON.stringify({ error: err.message }));
+        responseJson(res, 422, { error: err.message });
       }
     })
     .catch((err) => {
-      res.statusCode = 400;
-      res.end(JSON.stringify({ error: err.message }));
+      responseJson(res, 400, { error: err.message });
     });
 };
 
@@ -74,28 +66,23 @@ const update = (req, res, url) => {
   readBody(req)
     .then((updates) => {
       if (!validateDeviceUpdate(updates)) {
-        res.statusCode = 400;
-        res.end(JSON.stringify({ error: validateDeviceUpdate.errors }));
+        responseJson(res, 400, { error: validateDeviceUpdate.errors });
         return;
       }
 
       try {
         const updated = deviceService.update(id, updates);
         if (updated) {
-          res.statusCode = 200;
-          res.end(JSON.stringify({ data: updated }));
+          responseJson(res, 200, { data: updated });
         } else {
-          res.statusCode = 404;
-          res.end(JSON.stringify({ error: 'Not Found' }));
+          responseJson(res, 404, { error: 'Not Found' });
         }
       } catch (err) {
-        res.statusCode = 422;
-        res.end(JSON.stringify({ error: err.message }));
+        responseJson(res, 422, { error: err.message });
       }
     })
     .catch((err) => {
-      res.statusCode = 400;
-      res.end(JSON.stringify({ error: err.message }));
+      responseJson(res, 400, { error: err.message });
     });
 };
 
@@ -104,15 +91,12 @@ const remove = (req, res, url) => {
   try {
     const removed = deviceService.remove(id);
     if (removed === true) {
-      res.statusCode = 204;
-      res.end();
+      responseJson(res, 204);
     } else {
-      res.statusCode = 404;
-      res.end(JSON.stringify({ error: 'Not Found' }));
+      responseJson(res, 404, { error: 'Not Found' });
     }
   } catch (err) {
-    res.statusCode = 400;
-    res.end(JSON.stringify({ error: err.message }));
+    responseJson(res, 400, { error: err.message });
   }
 };
 
