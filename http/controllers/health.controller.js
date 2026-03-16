@@ -1,5 +1,3 @@
-const { readBody } = require('../../utils/http-utils');
-
 const check = (req, res) => {
   res.statusCode = 200;
   res.end(
