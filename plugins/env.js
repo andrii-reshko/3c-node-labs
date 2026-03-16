@@ -22,6 +22,10 @@ const schema = {
       type: 'string',
       minLength: 1,
     },
+    CORS_ORIGIN: {
+      type: 'string',
+      default: '*',
+    },
   },
 };
 
