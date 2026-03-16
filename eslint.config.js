@@ -23,5 +23,8 @@ export default [
         clearTimeout: 'readonly',
       },
     },
+    rules: {
+      'no-process-env': 'error',
+    },
   },
 ];

@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import config from './config/env.js';
+import env from './plugins/env.js';
 import router from './http/routes/index.js';
 import { logger } from './utils/logger.js';
 
@@ -7,6 +7,7 @@ const fastify = Fastify({
   logger: true,
 });
 
+await fastify.register(env);
 fastify.register(router);
 
 // Log server closure
@@ -15,13 +16,23 @@ fastify.addHook('onClose', (instance, done) => {
   done();
 });
 
-fastify.listen({ port: config.port, host: config.host }, (err, address) => {
-  if (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-  logger.info(`Server running at ${address}`);
-});
+// Task 2 – linter must prevent access process.env directly
+// const env = process.env.NODE_ENV;
+// console.log(env);
+
+fastify.listen(
+  {
+    port: fastify.config.PORT,
+    host: fastify.config.HOSTNAME,
+  },
+  (err, address) => {
+    if (err) {
+      fastify.log.error(err);
+      process.exit(1);
+    }
+    logger.info(`Server running at ${address}`);
+  },
+);
 
 // Graceful Shutdown
 const gracefulShutdown = (signal) => {
