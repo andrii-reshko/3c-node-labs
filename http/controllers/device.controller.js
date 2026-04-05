@@ -159,6 +159,10 @@ const importItems = async (request, reply) => {
         record.enabled === '1';
     }
 
+    // fix: unset id to avoid conflicts with existing items
+    delete record.id;
+    console.log(record);
+
     const valid = validate(record);
     if (!valid) {
       rejected.push({
