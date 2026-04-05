@@ -6,6 +6,7 @@ class Device {
     room: '',
     description: 'no description',
     enabled: false,
+    image: null,
   };
 
   constructor(data = {}) {
@@ -25,6 +26,7 @@ class Device {
     this.device = merged.device;
     this.status = merged.status;
     this.room = merged.room;
+    this.image = merged.image;
   }
 }
 

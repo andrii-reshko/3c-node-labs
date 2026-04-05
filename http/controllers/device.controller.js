@@ -1,5 +1,6 @@
 import * as deviceService from '../../services/device.service.js';
 import MESSAGES from '../../constants/messages.js';
+import { stringify } from 'csv-stringify/sync';
 
 const list = async (request, reply) => {
   const roomFilter = request.query.room;
@@ -9,6 +10,29 @@ const list = async (request, reply) => {
     data: results,
     total: results.length,
   });
+};
+
+const exportItems = async (request, reply) => {
+  const results = await deviceService.getAll();
+
+  const rows = results.map((item) => ({
+    id: item.id,
+    device: item.device,
+    status: item.status,
+    room: item.room,
+    description: item.description || '',
+    enabled: item.enabled,
+    image: item.image
+      ? `http://localhost:${request.server.config.PORT}/images/${item.image}`
+      : '',
+  }));
+
+  const csv = stringify(rows, { header: true });
+
+  reply.header('Content-Type', 'text/csv');
+  reply.header('Content-Disposition', 'attachment; filename="items.csv"');
+  reply.header('Content-Length', Buffer.byteLength(csv));
+  reply.send(csv);
 };
 
 const create = async (request, reply) => {
@@ -52,4 +76,4 @@ const remove = async (request, reply) => {
   }
 };
 
-export { list, create, update, remove };
+export { list, create, update, remove, exportItems };

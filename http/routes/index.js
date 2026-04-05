@@ -27,6 +27,7 @@ const router = async (fastify) => {
     healthController.details,
   );
   fastify.get('/device', { schema: listDeviceSchema }, deviceController.list);
+  fastify.get('/device/export', deviceController.exportItems);
   fastify.post(
     '/device',
     { schema: createDeviceSchema },
