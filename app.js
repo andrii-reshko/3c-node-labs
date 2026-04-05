@@ -6,6 +6,9 @@ import env from './plugins/env.js';
 import router from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
 import { createBackup } from './utils/backup.js';
+import { getModelHash } from './migrations/migrate.js';
+import { readJsonFile } from './utils/filesystem.js';
+import path from 'path';
 
 // eslint-disable-next-line no-process-env
 const isDev = process.env.NODE_ENV === 'development';
@@ -41,6 +44,19 @@ fastify.register(router);
 const backup = await createBackup();
 if (backup) {
   console.log(`Backup created: ${backup.timestamp}`);
+}
+
+const currentHash = getModelHash();
+const versionFile = path.join(process.cwd(), 'data', 'version.json');
+try {
+  const { hash } = await readJsonFile(versionFile);
+  if (hash !== currentHash) {
+    fastify.log.warn('Schema changed. Run "npm run migrate" to update.');
+  }
+} catch (err) {
+  if (err.code !== 'ENOENT') {
+    fastify.log.warn('Could not read version file');
+  }
 }
 
 // Log server closure

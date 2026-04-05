@@ -4,6 +4,8 @@ class Device {
     device: '',
     status: 'offline',
     room: '',
+    description: 'no description',
+    enabled: false,
   };
 
   constructor(data = {}) {

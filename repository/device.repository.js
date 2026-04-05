@@ -2,28 +2,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { constants } from 'fs';
 import Device from '../domain/device.entity.js';
-
-const DATA_DIR = path.join(process.cwd(), 'data', 'items');
+import { atomicWrite, readJsonFile, DATA_DIR } from '../utils/filesystem.js';
 
 async function ensureDir() {
   await fs.mkdir(DATA_DIR, { recursive: true });
-}
-
-async function atomicWrite(id, data) {
-  const tempPath = path.join(DATA_DIR, `${id}.tmp.json`);
-  const finalPath = path.join(DATA_DIR, `${id}.json`);
-
-  await fs.writeFile(tempPath, JSON.stringify(data, null, 2), {
-    encoding: 'utf8',
-    flag: 'w',
-  });
-
-  await fs.rename(tempPath, finalPath);
-}
-
-async function readJsonFile(filePath) {
-  const content = await fs.readFile(filePath, { encoding: 'utf8' });
-  return JSON.parse(content);
 }
 
 class DeviceRepository {
@@ -87,7 +69,7 @@ class DeviceRepository {
       room: merged.room,
     };
 
-    await atomicWrite(newId, instance);
+    await atomicWrite(DATA_DIR, newId, instance);
 
     return new Device(instance);
   }
@@ -116,7 +98,7 @@ class DeviceRepository {
       id: id,
     };
 
-    await atomicWrite(id, merged);
+    await atomicWrite(DATA_DIR, id, merged);
 
     return new Device(merged);
   }

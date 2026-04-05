@@ -5,6 +5,7 @@ node_modules
 .DS_Store
 framework_technology_2026
 
+data/version.json
 data/items/*.json
 data/backups/*
 !data/backups/.gitkeep
