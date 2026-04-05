@@ -1,37 +1,35 @@
 import storage from '../repository/device.repository.js';
 import Device from '../domain/device.entity.js';
 
-const getAll = (filter) => {
+const getAll = async (filter) => {
+  const items = await storage.findAll();
   if (filter) {
-    return storage.fetch((e) => e.room.toLowerCase() === filter.toLowerCase());
+    return items.filter((e) => e.room.toLowerCase() === filter.toLowerCase());
   }
-  return storage.fetch();
+  return items;
 };
 
-const create = (data) => {
+const create = async (data) => {
   const deviceEntity = new Device(data);
-  return storage.add(deviceEntity);
+  return await storage.create(deviceEntity);
 };
 
-const update = (id, data) => {
-  const all = storage.fetch();
-  const existing = all.find((d) => d.id === id);
-
+const update = async (id, data) => {
+  const existing = await storage.findById(id);
   if (!existing) return undefined;
-
   const updatedData = {
     ...existing,
     ...data,
-    id: existing.id, // Immutable ID
+    id: existing.id,
   };
 
   const deviceEntity = new Device(updatedData);
 
-  return storage.update(id, deviceEntity);
+  return await storage.update(id, deviceEntity);
 };
 
-const remove = (id) => {
-  return storage.remove(id);
+const remove = async (id) => {
+  return await storage.remove(id);
 };
 
 export { getAll, create, update, remove };

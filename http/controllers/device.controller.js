@@ -1,9 +1,9 @@
 import * as deviceService from '../../services/device.service.js';
 import MESSAGES from '../../constants/messages.js';
 
-const list = (request, reply) => {
+const list = async (request, reply) => {
   const roomFilter = request.query.room;
-  const results = deviceService.getAll(roomFilter);
+  const results = await deviceService.getAll(roomFilter);
 
   reply.send({
     data: results,
@@ -11,23 +11,23 @@ const list = (request, reply) => {
   });
 };
 
-const create = (request, reply) => {
+const create = async (request, reply) => {
   const data = request.body;
 
   try {
-    const instance = deviceService.create(data);
+    const instance = await deviceService.create(data);
     reply.code(201).send({ data: instance });
   } catch (err) {
     reply.unprocessableEntity(err.message);
   }
 };
 
-const update = (request, reply) => {
-  const id = request.params.id; // Fastify coerces this to number based on schema
+const update = async (request, reply) => {
+  const id = request.params.id;
   const updates = request.body;
 
   try {
-    const updated = deviceService.update(id, updates);
+    const updated = await deviceService.update(id, updates);
     if (updated) {
       reply.send({ data: updated });
     } else {
@@ -38,10 +38,10 @@ const update = (request, reply) => {
   }
 };
 
-const remove = (request, reply) => {
+const remove = async (request, reply) => {
   const id = request.params.id;
   try {
-    const removed = deviceService.remove(id);
+    const removed = await deviceService.remove(id);
     if (removed === true) {
       reply.code(204).send();
     } else {

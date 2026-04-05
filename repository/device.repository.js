@@ -1,66 +1,142 @@
+import fs from 'fs/promises';
+import path from 'path';
+import { constants } from 'fs';
 import Device from '../domain/device.entity.js';
 
-// In memory storage for the Smart home devices.
-// Example: data [{ "id": 1, "device": "Smart Lamp", "status": "on", "room": "Kitchen" }]
+const DATA_DIR = path.join(process.cwd(), 'data', 'items');
 
-class Storage {
-  constructor() {
-    this.devices = [];
-    this.nextId = 1;
+async function ensureDir() {
+  await fs.mkdir(DATA_DIR, { recursive: true });
+}
+
+async function atomicWrite(id, data) {
+  const tempPath = path.join(DATA_DIR, `${id}.tmp.json`);
+  const finalPath = path.join(DATA_DIR, `${id}.json`);
+
+  await fs.writeFile(tempPath, JSON.stringify(data, null, 2), {
+    encoding: 'utf8',
+    flag: 'w',
+  });
+
+  await fs.rename(tempPath, finalPath);
+}
+
+async function readJsonFile(filePath) {
+  const content = await fs.readFile(filePath, { encoding: 'utf8' });
+  return JSON.parse(content);
+}
+
+class DeviceRepository {
+  async findAll() {
+    await ensureDir();
+    const files = await fs.readdir(DATA_DIR);
+
+    const items = await Promise.all(
+      files
+        .filter((f) => f.endsWith('.json') && !f.endsWith('.tmp.json'))
+        .map(async (file) => {
+          try {
+            const filePath = path.join(DATA_DIR, file);
+            const data = await readJsonFile(filePath);
+            return new Device(data);
+          } catch (err) {
+            if (err instanceof SyntaxError) {
+              return null;
+            }
+            throw err;
+          }
+        }),
+    );
+
+    return items.filter(Boolean);
   }
 
-  fetch(filterFunc) {
-    const results =
-      filterFunc && typeof filterFunc === 'function'
-        ? this.devices.filter(filterFunc)
-        : this.devices;
+  async findById(id) {
+    await ensureDir();
+    const filePath = path.join(DATA_DIR, `${id}.json`);
 
-    return results.map((d) => new Device(d));
+    try {
+      await fs.access(filePath, constants.R_OK);
+      const data = await readJsonFile(filePath);
+      return new Device(data);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        return undefined;
+      }
+      throw err;
+    }
   }
 
-  add(deviceEntity) {
-    // Assign ID
+  async create(data = {}) {
+    await ensureDir();
+
+    const merged = { ...Device.DEFAULTS, ...data };
+
+    const files = await fs.readdir(DATA_DIR);
+    const existingIds = files
+      .filter((f) => f.endsWith('.json') && !f.endsWith('.tmp.json'))
+      .map((f) => parseInt(f.replace('.json', ''), 10))
+      .filter((n) => !isNaN(n));
+
+    const newId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+
     const instance = {
-      id: this.nextId++,
-      device: deviceEntity.device,
-      status: deviceEntity.status,
-      room: deviceEntity.room,
+      id: newId,
+      device: merged.device,
+      status: merged.status,
+      room: merged.room,
     };
 
-    this.devices.push(instance);
+    await atomicWrite(newId, instance);
 
     return new Device(instance);
   }
 
-  update(id, deviceEntity) {
-    const index = this.devices.findIndex((d) => d.id === id);
-    if (index === -1) return undefined;
+  async update(id, data) {
+    await ensureDir();
+    const filePath = path.join(DATA_DIR, `${id}.json`);
 
-    const prev = this.devices[index];
+    let existing;
+    try {
+      existing = await readJsonFile(filePath);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        return undefined;
+      }
+      if (err instanceof SyntaxError) {
+        return undefined;
+      }
+      throw err;
+    }
 
-    const instance = {
-      ...prev,
-      device: deviceEntity.device,
-      status: deviceEntity.status,
-      room: deviceEntity.room,
-      id: prev.id, // Ensure ID is not changed
+    const merged = {
+      ...Device.DEFAULTS,
+      ...existing,
+      ...data,
+      id: id,
     };
 
-    this.devices.splice(index, 1, instance);
+    await atomicWrite(id, merged);
 
-    return new Device(instance);
+    return new Device(merged);
   }
 
-  remove(id) {
-    const index = this.devices.findIndex((d) => d.id === id);
-    if (index === -1) return false;
+  async remove(id) {
+    await ensureDir();
+    const filePath = path.join(DATA_DIR, `${id}.json`);
 
-    this.devices.splice(index, 1);
-    return true;
+    try {
+      await fs.unlink(filePath);
+      return true;
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        return false;
+      }
+      throw err;
+    }
   }
 }
 
-// Export a singleton instance of Storage
-const storage = new Storage();
+const deviceRepository = new DeviceRepository();
 
-export default storage;
+export default deviceRepository;
