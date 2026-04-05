@@ -3,12 +3,12 @@ class Device {
     id: null,
     device: '',
     status: 'offline',
-    room: ''
+    room: '',
   };
 
   constructor(data = {}) {
     const merged = { ...Device.DEFAULTS, ...data };
-    
+
     if (!merged.device || typeof merged.device !== 'string') {
       throw new Error('Device name is required and must be a string');
     }
