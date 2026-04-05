@@ -3,15 +3,23 @@ import MESSAGES from '../../constants/messages.js';
 import { stringify } from 'csv-stringify/sync';
 import { parse } from 'csv-parse/sync';
 import { importDeviceSchema } from '../../schemas/device.schema.js';
+import { getImageUrl, getRelativeImagePath } from '../../utils/image.js';
+import fs from 'fs/promises';
+import path from 'path';
 import { Ajv } from 'ajv';
 
 const list = async (request, reply) => {
   const roomFilter = request.query.room;
   const results = await deviceService.getAll(roomFilter);
 
+  const data = results.map((item) => ({
+    ...item,
+    image: getImageUrl(request, item.image),
+  }));
+
   reply.send({
-    data: results,
-    total: results.length,
+    data,
+    total: data.length,
   });
 };
 
@@ -25,9 +33,7 @@ const exportItems = async (request, reply) => {
     room: item.room,
     description: item.description || '',
     enabled: item.enabled,
-    image: item.image
-      ? `http://localhost:${request.server.config.PORT}/images/${item.image}`
-      : '',
+    image: getImageUrl(request, item.image) || '',
   }));
 
   const csv = stringify(rows, { header: true });
@@ -77,6 +83,37 @@ const remove = async (request, reply) => {
   } catch (err) {
     reply.badRequest(err.message);
   }
+};
+
+const uploadImage = async (request, reply) => {
+  const id = request.params.id;
+  const file = await request.file();
+  const allowedMimes = ['image/jpeg', 'image/png'];
+
+  if (!file) {
+    return reply.badRequest('No file uploaded');
+  }
+
+  const contentType = file.mimetype;
+  if (!allowedMimes.includes(contentType)) {
+    return reply.badRequest('Only JPEG and PNG images are allowed');
+  }
+
+  const buffer = await file.toBuffer();
+
+  const ext = contentType === 'image/png' ? 'png' : 'jpg';
+  const uploadDir = path.join(process.cwd(), 'uploads', String(id));
+  const uploadPath = path.join(uploadDir, `image.${ext}`);
+
+  await fs.mkdir(uploadDir, { recursive: true });
+  await fs.writeFile(uploadPath, buffer);
+
+  const relativePath = getRelativeImagePath(id, ext);
+  await deviceService.update(id, { image: relativePath });
+
+  reply.send({
+    data: { image: relativePath, url: getImageUrl(request, relativePath) },
+  });
 };
 
 const importItems = async (request, reply) => {
@@ -148,4 +185,4 @@ const importItems = async (request, reply) => {
   });
 };
 
-export { list, create, update, remove, exportItems, importItems };
+export { list, create, update, remove, exportItems, importItems, uploadImage };

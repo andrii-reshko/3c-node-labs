@@ -18,6 +18,9 @@ const deviceResponseSchema = {
     device: { type: 'string' },
     status: { type: 'string' },
     room: { type: 'string' },
+    description: { type: 'string' },
+    enabled: { type: 'boolean' },
+    image: { type: 'string', nullable: true },
   },
 };
 

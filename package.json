@@ -34,6 +34,7 @@
     "@fastify/helmet": "^13.0.2",
     "@fastify/multipart": "^9.4.0",
     "@fastify/sensible": "^6.0.4",
+    "@fastify/static": "^8.0.3",
     "ajv": "^8.18.0",
     "csv-parse": "^6.2.1",
     "csv-stringify": "^6.5.2",

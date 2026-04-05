@@ -44,6 +44,11 @@ const router = async (fastify) => {
     { schema: removeDeviceSchema },
     deviceController.remove,
   );
+  fastify.post(
+    '/device/:id/image',
+    { config: { validate: false } },
+    deviceController.uploadImage,
+  );
 };
 
 export default router;

@@ -9,6 +9,10 @@ const getAll = async (filter) => {
   return items;
 };
 
+const findById = async (id) => {
+  return await storage.findById(id);
+};
+
 const create = async (data) => {
   const deviceEntity = new Device(data);
   return await storage.create(deviceEntity);
@@ -32,4 +36,4 @@ const remove = async (id) => {
   return await storage.remove(id);
 };
 
-export { getAll, create, update, remove };
+export { getAll, findById, create, update, remove };

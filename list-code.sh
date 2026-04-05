@@ -4,7 +4,12 @@ out_file="listing.md"
 > "$out_file"
 
 find . \
-    \( -name "node_modules" -o -name ".git" -o -name ".idea" -o -name "framework_technology_2026" \) -prune \
+    \( -name "node_modules" -o \
+        -name ".git" -o \
+        -name ".idea" -o \
+        -name "data" -o \
+        -name "uploads" -o \
+        -name "framework_technology_2026" \) -prune \
     -o -type f \
     -not -name "*.sh" \
     -not -name "*.md" \

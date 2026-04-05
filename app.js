@@ -3,6 +3,7 @@ import sensible from '@fastify/sensible';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 import env from './plugins/env.js';
 import router from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
@@ -30,7 +31,13 @@ const fastify = Fastify({
 await fastify.register(env);
 fastify.register(sensible);
 fastify.register(helmet, { global: true });
-fastify.register(multipart);
+fastify.register(multipart, {
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+fastify.register(fastifyStatic, {
+  root: path.join(process.cwd(), 'uploads'),
+  prefix: '/',
+});
 
 // To test CORS in production, set NODE_ENV=production and CORS_ORIGIN=http://example.com in .env
 // Then run: curl -v -H "Origin: http://example.com" -X OPTIONS http://localhost:3001/health

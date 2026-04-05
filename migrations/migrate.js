@@ -57,3 +57,5 @@ export async function migrate() {
 export function getModelHash() {
   return computeModelHash();
 }
+
+migrate();

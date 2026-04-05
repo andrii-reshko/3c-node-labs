@@ -67,6 +67,8 @@ class DeviceRepository {
       device: merged.device,
       status: merged.status,
       room: merged.room,
+      description: merged.description,
+      image: merged.image,
     };
 
     await atomicWrite(DATA_DIR, newId, instance);

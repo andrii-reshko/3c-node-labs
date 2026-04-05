@@ -9,3 +9,5 @@ data/version.json
 data/items/*.json
 data/backups/*
 !data/backups/.gitkeep
+uploads/*
+!uploads/.gitkeep

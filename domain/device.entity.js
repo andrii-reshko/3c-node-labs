@@ -26,6 +26,8 @@ class Device {
     this.device = merged.device;
     this.status = merged.status;
     this.room = merged.room;
+    this.description = merged.description;
+    this.enabled = merged.enabled;
     this.image = merged.image;
   }
 }
