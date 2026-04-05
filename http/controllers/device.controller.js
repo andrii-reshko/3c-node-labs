@@ -1,6 +1,9 @@
 import * as deviceService from '../../services/device.service.js';
 import MESSAGES from '../../constants/messages.js';
 import { stringify } from 'csv-stringify/sync';
+import { parse } from 'csv-parse/sync';
+import { importDeviceSchema } from '../../schemas/device.schema.js';
+import { Ajv } from 'ajv';
 
 const list = async (request, reply) => {
   const roomFilter = request.query.room;
@@ -76,4 +79,73 @@ const remove = async (request, reply) => {
   }
 };
 
-export { list, create, update, remove, exportItems };
+const importItems = async (request, reply) => {
+  const data = await request.file();
+  if (!data) {
+    return reply.badRequest('No file uploaded');
+  }
+
+  const buffer = await data.toBuffer();
+  const content = buffer.toString('utf8');
+  const filename = data.filename.toLowerCase();
+
+  let records;
+
+  if (filename.endsWith('.csv')) {
+    records = parse(content, { columns: true, skip_empty_lines: true });
+  } else if (filename.endsWith('.json')) {
+    try {
+      records = JSON.parse(content);
+      if (!Array.isArray(records)) {
+        records = [records];
+      }
+    } catch {
+      return reply.badRequest('Invalid JSON file');
+    }
+  } else {
+    return reply.badRequest('Unsupported file format. Use CSV or JSON');
+  }
+
+  const ajv = new Ajv({ allErrors: true });
+  const validate = ajv.compile(importDeviceSchema);
+
+  const imported = [];
+  const rejected = [];
+
+  for (let i = 0; i < records.length; i++) {
+    const record = records[i];
+
+    if (record.enabled !== undefined) {
+      record.enabled =
+        record.enabled === true ||
+        record.enabled === 'true' ||
+        record.enabled === '1';
+    }
+
+    const valid = validate(record);
+    if (!valid) {
+      rejected.push({
+        row: i + 1,
+        errors: validate.errors,
+      });
+    } else {
+      try {
+        const created = await deviceService.create(record);
+        imported.push(created);
+      } catch (err) {
+        rejected.push({
+          row: i + 1,
+          reason: err.message,
+        });
+      }
+    }
+  }
+
+  reply.send({
+    imported: imported.length,
+    rejected: rejected.length,
+    rejectedDetails: rejected,
+  });
+};
+
+export { list, create, update, remove, exportItems, importItems };

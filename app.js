@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import sensible from '@fastify/sensible';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
 import env from './plugins/env.js';
 import router from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
@@ -29,6 +30,7 @@ const fastify = Fastify({
 await fastify.register(env);
 fastify.register(sensible);
 fastify.register(helmet, { global: true });
+fastify.register(multipart);
 
 // To test CORS in production, set NODE_ENV=production and CORS_ORIGIN=http://example.com in .env
 // Then run: curl -v -H "Origin: http://example.com" -X OPTIONS http://localhost:3001/health

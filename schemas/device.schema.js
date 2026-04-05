@@ -4,6 +4,9 @@ const deviceProps = {
     device: { type: 'string' },
     status: { type: 'string' },
     room: { type: 'string' },
+    description: { type: 'string' },
+    enabled: { type: 'boolean' },
+    image: { type: 'string', nullable: true },
   },
   additionalProperties: false,
 };
@@ -91,9 +94,15 @@ const removeDeviceSchema = {
   },
 };
 
+const importDeviceSchema = {
+  ...deviceProps,
+  required: ['device', 'status', 'room'],
+};
+
 export {
   createDeviceSchema,
   updateDeviceSchema,
   listDeviceSchema,
   removeDeviceSchema,
+  importDeviceSchema,
 };

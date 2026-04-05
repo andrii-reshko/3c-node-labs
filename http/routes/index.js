@@ -28,6 +28,7 @@ const router = async (fastify) => {
   );
   fastify.get('/device', { schema: listDeviceSchema }, deviceController.list);
   fastify.get('/device/export', deviceController.exportItems);
+  fastify.post('/device/import', deviceController.importItems);
   fastify.post(
     '/device',
     { schema: createDeviceSchema },
