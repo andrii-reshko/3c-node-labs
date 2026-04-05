@@ -6,3 +6,5 @@ node_modules
 framework_technology_2026
 
 data/items/*.json
+data/backups/*
+!data/backups/.gitkeep

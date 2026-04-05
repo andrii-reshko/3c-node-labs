@@ -5,6 +5,7 @@ import helmet from '@fastify/helmet';
 import env from './plugins/env.js';
 import router from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
+import { createBackup } from './utils/backup.js';
 
 // eslint-disable-next-line no-process-env
 const isDev = process.env.NODE_ENV === 'development';
@@ -36,6 +37,11 @@ fastify.register(cors, {
 
 fastify.setErrorHandler(errorHandler);
 fastify.register(router);
+
+const backup = await createBackup();
+if (backup) {
+  console.log(`Backup created: ${backup.timestamp}`);
+}
 
 // Log server closure
 fastify.addHook('onClose', (instance, done) => {
