@@ -7,6 +7,7 @@ const deviceProps = {
     description: { type: 'string' },
     enabled: { type: 'boolean' },
     image: { type: 'string', nullable: true },
+    power: { type: 'integer' },
   },
   additionalProperties: false,
 };
@@ -21,6 +22,7 @@ const deviceResponseSchema = {
     description: { type: 'string' },
     enabled: { type: 'boolean' },
     image: { type: 'string', nullable: true },
+    power: { type: 'integer' },
   },
 };
 

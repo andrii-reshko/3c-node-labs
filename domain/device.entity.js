@@ -7,6 +7,7 @@ class Device {
     description: 'no description',
     enabled: false,
     image: null,
+    power: 0,
   };
 
   constructor(data = {}) {
@@ -29,6 +30,7 @@ class Device {
     this.description = merged.description;
     this.enabled = merged.enabled;
     this.image = merged.image;
+    this.power = merged.power;
   }
 }
 
