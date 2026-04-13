@@ -2,11 +2,12 @@ import storage from '../repository/device.repository.js';
 import Device from '../domain/device.entity.js';
 
 const getAll = async (filter) => {
-  const items = await storage.findAll();
-  if (filter) {
-    return items.filter((e) => e.room.toLowerCase() === filter.toLowerCase());
-  }
+  const items = await storage.findAll(filter);
   return items;
+};
+
+const getAllPaginated = async (page, limit, filter) => {
+  return await storage.findAllPaginated(page, limit, filter);
 };
 
 const findById = async (id) => {
@@ -36,4 +37,4 @@ const remove = async (id) => {
   return await storage.remove(id);
 };
 
-export { getAll, findById, create, update, remove };
+export { getAll, getAllPaginated, findById, create, update, remove };

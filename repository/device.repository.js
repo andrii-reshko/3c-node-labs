@@ -9,7 +9,7 @@ async function ensureDir() {
 }
 
 class DeviceRepository {
-  async findAll() {
+  async findAll(filter) {
     await ensureDir();
     const files = await fs.readdir(DATA_DIR);
 
@@ -30,7 +30,22 @@ class DeviceRepository {
         }),
     );
 
-    return items.filter(Boolean);
+    const result = items.filter(Boolean);
+    if (filter) {
+      return result.filter(
+        (e) => e.room.toLowerCase() === filter.toLowerCase(),
+      );
+    }
+    return result;
+  }
+
+  async findAllPaginated(page = 1, limit = 10, filter = null) {
+    const allItems = await this.findAll(filter);
+    const total = allItems.length;
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const data = allItems.slice(start, end);
+    return { data, total };
   }
 
   async findById(id) {

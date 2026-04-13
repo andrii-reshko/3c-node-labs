@@ -23,6 +23,33 @@ const list = async (request, reply) => {
   });
 };
 
+const listPaginated = async (request, reply) => {
+  const page = parseInt(request.query.page) || 1;
+  const limit = parseInt(request.query.limit) || 10;
+  const roomFilter = request.query.room;
+
+  const { data, total } = await deviceService.getAllPaginated(
+    page,
+    limit,
+    roomFilter,
+  );
+
+  const items = data.map((item) => ({
+    ...item,
+    image: getImageUrl(request, item.image),
+  }));
+
+  reply.send({
+    data: items,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
+};
+
 const exportItems = async (request, reply) => {
   const results = await deviceService.getAll();
 
@@ -189,4 +216,13 @@ const importItems = async (request, reply) => {
   });
 };
 
-export { list, create, update, remove, exportItems, importItems, uploadImage };
+export {
+  list,
+  listPaginated,
+  create,
+  update,
+  remove,
+  exportItems,
+  importItems,
+  uploadImage,
+};

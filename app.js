@@ -5,7 +5,7 @@ import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import env from './plugins/env.js';
-import router from './http/routes/index.js';
+import { v1, v2 } from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
 import { createBackup } from './utils/backup.js';
 import { getModelHash } from './migrations/migrate.js';
@@ -48,7 +48,8 @@ fastify.register(cors, {
 });
 
 fastify.setErrorHandler(errorHandler);
-fastify.register(router, { prefix: '/api/v1' });
+fastify.register(v1, { prefix: '/api/v1' });
+fastify.register(v2, { prefix: '/api/v2' });
 
 const backup = await createBackup();
 if (backup) {
