@@ -48,7 +48,7 @@ fastify.register(cors, {
 });
 
 fastify.setErrorHandler(errorHandler);
-fastify.register(router);
+fastify.register(router, { prefix: '/api/v1' });
 
 const backup = await createBackup();
 if (backup) {

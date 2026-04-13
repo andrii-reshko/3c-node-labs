@@ -1,53 +1,57 @@
 import * as deviceController from '../controllers/device.controller.js';
 import * as healthController from '../controllers/health.controller.js';
 import {
-  healthSchema,
   healthDetailsSchema,
+  healthSchema,
 } from '../../schemas/health.schema.js';
 import {
-  listDeviceSchema,
   createDeviceSchema,
-  updateDeviceSchema,
+  listDeviceSchema,
   removeDeviceSchema,
+  updateDeviceSchema,
 } from '../../schemas/device.schema.js';
+import { requiresApiKey } from '../hooks/api-key.js';
 
 const router = async (fastify) => {
-  fastify.get('/health', { schema: healthSchema }, healthController.check);
-  fastify.get(
-    '/health/details',
-    {
-      schema: healthDetailsSchema,
-      onRequest: async (request, reply) => {
-        const apiKey = request.headers['x-api-key'];
-        if (apiKey !== fastify.config.ADMIN_API_KEY) {
-          reply.unauthorized('Invalid API Key');
-        }
-      },
+  fastify.register(
+    async (instance) => {
+      instance.get('/', { schema: healthSchema }, healthController.check);
+      instance.get(
+        '/details',
+        { schema: healthDetailsSchema, onRequest: requiresApiKey },
+        healthController.details,
+      );
     },
-    healthController.details,
+    { prefix: '/health' },
   );
-  fastify.get('/device', { schema: listDeviceSchema }, deviceController.list);
-  fastify.get('/device/export', deviceController.exportItems);
-  fastify.post('/device/import', deviceController.importItems);
-  fastify.post(
-    '/device',
-    { schema: createDeviceSchema },
-    deviceController.create,
-  );
-  fastify.patch(
-    '/device/:id',
-    { schema: updateDeviceSchema },
-    deviceController.update,
-  );
-  fastify.delete(
-    '/device/:id',
-    { schema: removeDeviceSchema },
-    deviceController.remove,
-  );
-  fastify.post(
-    '/device/:id/image',
-    { config: { validate: false } },
-    deviceController.uploadImage,
+
+  fastify.register(
+    async (instance) => {
+      instance.get('/', { schema: listDeviceSchema }, deviceController.list);
+      instance.get('/export', deviceController.exportItems);
+      instance.post('/import', deviceController.importItems);
+      instance.post(
+        '/',
+        { schema: createDeviceSchema },
+        deviceController.create,
+      );
+      instance.patch(
+        '/:id',
+        { schema: updateDeviceSchema },
+        deviceController.update,
+      );
+      instance.delete(
+        '/:id',
+        { schema: removeDeviceSchema },
+        deviceController.remove,
+      );
+      instance.post(
+        '/:id/image',
+        { config: { validate: false } },
+        deviceController.uploadImage,
+      );
+    },
+    { prefix: '/device' },
   );
 };
 
