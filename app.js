@@ -4,6 +4,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
+import rateLimit from '@fastify/rate-limit';
 import env from './plugins/env.js';
 import { v1, v2 } from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
@@ -29,6 +30,11 @@ const fastify = Fastify({
 });
 
 await fastify.register(env);
+fastify.register(rateLimit, {
+  max: 100,
+  timeWindow: '1 minute',
+  allowList: [],
+});
 fastify.register(sensible);
 fastify.register(helmet, { global: true });
 fastify.register(multipart, {
