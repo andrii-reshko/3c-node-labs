@@ -68,6 +68,37 @@ const listDeviceSchema = {
     type: 'object',
     properties: {
       room: { type: 'string' },
+      page: { type: 'integer', minimum: 1, default: 1 },
+      limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+    },
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: deviceResponseSchema,
+        },
+        meta: {
+          type: 'object',
+          properties: {
+            total: { type: 'integer' },
+            page: { type: 'integer' },
+            limit: { type: 'integer' },
+            totalPages: { type: 'integer' },
+          },
+        },
+      },
+    },
+  },
+};
+
+const listDeviceSchemaV1 = {
+  querystring: {
+    type: 'object',
+    properties: {
+      room: { type: 'string' },
     },
   },
   response: {
@@ -108,6 +139,7 @@ export {
   createDeviceSchema,
   updateDeviceSchema,
   listDeviceSchema,
+  listDeviceSchemaV1,
   removeDeviceSchema,
   importDeviceSchema,
 };
