@@ -6,6 +6,7 @@ import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import rateLimit from '@fastify/rate-limit';
 import env from './plugins/env.js';
+import apiDocs from './plugins/apidocs.js';
 import { v1, v2 } from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
 import { createBackup } from './utils/backup.js';
@@ -54,6 +55,7 @@ fastify.register(cors, {
 });
 
 fastify.setErrorHandler(errorHandler);
+fastify.register(apiDocs);
 fastify.register(v1, { prefix: '/api/v1' });
 fastify.register(v2, { prefix: '/api/v2' });
 

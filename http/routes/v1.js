@@ -6,19 +6,31 @@ import {
 } from '../../schemas/health.schema.js';
 import {
   createDeviceSchema,
-  listDeviceSchema,
+  listDeviceSchemaV1,
   removeDeviceSchema,
   updateDeviceSchema,
 } from '../../schemas/device.schema.js';
 import { requiresApiKey } from '../hooks/api-key.js';
+import { tagsV1 } from '../../plugins/apidocs.js';
 
-const router = async (fastify) => {
+async function routes(fastify) {
   fastify.register(
     async (instance) => {
-      instance.get('/', { schema: healthSchema }, healthController.check);
+      instance.get(
+        '/',
+        { schema: { ...healthSchema, tags: ['Health'] } },
+        healthController.check,
+      );
       instance.get(
         '/details',
-        { schema: healthDetailsSchema, onRequest: requiresApiKey },
+        {
+          schema: {
+            ...healthDetailsSchema,
+            tags: ['Health'],
+            security: [{ apiKey: [] }],
+          },
+          onRequest: requiresApiKey,
+        },
         healthController.details,
       );
     },
@@ -27,32 +39,44 @@ const router = async (fastify) => {
 
   fastify.register(
     async (instance) => {
-      instance.get('/', { schema: listDeviceSchema }, deviceController.list);
-      instance.get('/export', deviceController.exportItems);
-      instance.post('/import', deviceController.importItems);
+      instance.get(
+        '/',
+        { schema: { ...listDeviceSchemaV1, ...tagsV1 } },
+        deviceController.list,
+      );
+      instance.get(
+        '/export',
+        { schema: { ...tagsV1 } },
+        deviceController.exportItems,
+      );
+      instance.post(
+        '/import',
+        { schema: { ...tagsV1 } },
+        deviceController.importItems,
+      );
       instance.post(
         '/',
-        { schema: createDeviceSchema },
+        { schema: { ...createDeviceSchema, ...tagsV1 } },
         deviceController.create,
       );
       instance.patch(
         '/:id',
-        { schema: updateDeviceSchema },
+        { schema: { ...updateDeviceSchema, ...tagsV1 } },
         deviceController.update,
       );
       instance.delete(
         '/:id',
-        { schema: removeDeviceSchema },
+        { schema: { ...removeDeviceSchema, ...tagsV1 } },
         deviceController.remove,
       );
       instance.post(
         '/:id/image',
-        { config: { validate: false } },
+        { config: { validate: false }, schema: { ...tagsV1 } },
         deviceController.uploadImage,
       );
     },
     { prefix: '/device' },
   );
-};
+}
 
-export default router;
+export default routes;
