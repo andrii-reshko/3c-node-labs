@@ -216,6 +216,16 @@ const importItems = async (request, reply) => {
   });
 };
 
+const getDeviceDetails = async (request, reply) => {
+  const id = request.params.id;
+  const device = await deviceService.getDeviceWithReference(id);
+  if (!device) {
+    return reply.notFound('Device not found');
+  }
+
+  reply.send({ data: device });
+};
+
 export {
   list,
   listPaginated,
@@ -225,4 +235,5 @@ export {
   exportItems,
   importItems,
   uploadImage,
+  getDeviceDetails,
 };

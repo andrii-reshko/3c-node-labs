@@ -15,13 +15,13 @@ import { tagsV1 } from '../../plugins/apidocs.js';
 
 async function routes(fastify) {
   fastify.register(
-    async (instance) => {
-      instance.get(
+    async (route) => {
+      route.get(
         '/',
         { schema: { ...healthSchema, tags: ['Health'] } },
         healthController.check,
       );
-      instance.get(
+      route.get(
         '/details',
         {
           schema: {
@@ -38,41 +38,46 @@ async function routes(fastify) {
   );
 
   fastify.register(
-    async (instance) => {
-      instance.get(
+    async (route) => {
+      route.get(
         '/',
         { schema: { ...listDeviceSchemaV1, ...tagsV1 } },
         deviceController.list,
       );
-      instance.get(
+      route.get(
         '/export',
         { schema: { ...tagsV1 } },
         deviceController.exportItems,
       );
-      instance.post(
+      route.post(
         '/import',
         { schema: { ...tagsV1 } },
         deviceController.importItems,
       );
-      instance.post(
+      route.post(
         '/',
         { schema: { ...createDeviceSchema, ...tagsV1 } },
         deviceController.create,
       );
-      instance.patch(
+      route.patch(
         '/:id',
         { schema: { ...updateDeviceSchema, ...tagsV1 } },
         deviceController.update,
       );
-      instance.delete(
+      route.delete(
         '/:id',
         { schema: { ...removeDeviceSchema, ...tagsV1 } },
         deviceController.remove,
       );
-      instance.post(
+      route.post(
         '/:id/image',
         { config: { validate: false }, schema: { ...tagsV1 } },
         deviceController.uploadImage,
+      );
+      route.get(
+        '/:id/details',
+        { schema: { ...tagsV1 } },
+        deviceController.getDeviceDetails,
       );
     },
     { prefix: '/device' },

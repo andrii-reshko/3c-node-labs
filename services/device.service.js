@@ -1,4 +1,5 @@
 import storage from '../repository/device.repository.js';
+import remote from '../repository/remote.repository.js';
 import Device from '../domain/device.entity.js';
 
 const getAll = async (filter) => {
@@ -37,4 +38,35 @@ const remove = async (id) => {
   return await storage.remove(id);
 };
 
-export { getAll, getAllPaginated, findById, create, update, remove };
+const getDeviceWithReference = async (id) => {
+  const device = await findById(id);
+  if (!device) return undefined;
+
+  let referenceData = null;
+  try {
+    referenceData = await remote.getReferenceData();
+  } catch (err) {
+    console.debug(err);
+  }
+
+  const typeInfo = referenceData?.find(
+    (t) => String(t.id) === String(device.id),
+  ) || { powerWatt: null };
+
+  return {
+    ...device,
+    ...{
+      power: typeInfo.powerWatt,
+    },
+  };
+};
+
+export {
+  getAll,
+  getAllPaginated,
+  findById,
+  create,
+  update,
+  remove,
+  getDeviceWithReference,
+};

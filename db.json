@@ -1,0 +1,19 @@
+{
+  "deviceTypes": [
+    {
+      "id": 10,
+      "type": "Motion Sensor",
+      "powerWatt": 100500
+    },
+    {
+      "id": 11,
+      "type": "Smart Speaker",
+      "powerWatt": 100500
+    },
+    {
+      "id": 12,
+      "type": "Sleek Metal alarm",
+      "powerWatt": 100500
+    }
+  ]
+}
