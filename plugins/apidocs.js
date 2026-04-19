@@ -2,7 +2,7 @@ import fp from 'fastify-plugin';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 
-export default fp((fastify, opts) => {
+export default fp((fastify) => {
   let baseUrl = `http://${fastify.config.HOSTNAME}:${fastify.config.PORT}`;
   fastify.register(swagger, {
     openapi: {
