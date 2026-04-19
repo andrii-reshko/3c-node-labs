@@ -40,6 +40,8 @@
     "@fastify/static": "^8.0.3",
     "@fastify/swagger": "^9.7.0",
     "@fastify/swagger-ui": "^5.2.5",
+    "@octokit/graphql": "^9.0.3",
+    "@octokit/rest": "^22.0.1",
     "ajv": "^8.18.0",
     "csv-parse": "^6.2.1",
     "csv-stringify": "^6.5.2",

@@ -1,5 +1,6 @@
 import * as deviceController from '../controllers/device.controller.js';
 import * as healthController from '../controllers/health.controller.js';
+import * as githubController from '../controllers/github.controller.js';
 import {
   healthDetailsSchema,
   healthSchema,
@@ -11,7 +12,8 @@ import {
   updateDeviceSchema,
 } from '../../schemas/device.schema.js';
 import { requiresApiKey } from '../hooks/api-key.js';
-import { tagsV1 } from '../../plugins/apidocs.js';
+import { tagsGh, tagsV1 } from '../../plugins/apidocs.js';
+import { githubRequestSchema } from '../../schemas/github.schema.js';
 
 async function routes(fastify) {
   fastify.register(
@@ -81,6 +83,17 @@ async function routes(fastify) {
       );
     },
     { prefix: '/device' },
+  );
+
+  fastify.register(
+    async (route) => {
+      route.get(
+        '/shared-repos',
+        { schema: { ...githubRequestSchema, ...tagsGh } },
+        githubController.sharedReposV1,
+      );
+    },
+    { prefix: '/github' },
   );
 }
 

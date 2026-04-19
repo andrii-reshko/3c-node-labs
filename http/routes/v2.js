@@ -1,11 +1,13 @@
 import * as deviceController from '../controllers/device.controller.js';
+import * as githubController from '../controllers/github.controller.js';
 import {
   createDeviceSchema,
   listDeviceSchema,
   removeDeviceSchema,
   updateDeviceSchema,
 } from '../../schemas/device.schema.js';
-import { tagsV2 } from '../../plugins/apidocs.js';
+import { tagsGh, tagsV2 } from '../../plugins/apidocs.js';
+import { githubRequestSchema } from '../../schemas/github.schema.js';
 
 const router = async (fastify) => {
   fastify.register(
@@ -47,6 +49,17 @@ const router = async (fastify) => {
       );
     },
     { prefix: '/device' },
+  );
+
+  fastify.register(
+    async (route) => {
+      route.get(
+        '/shared-repos',
+        { schema: { ...githubRequestSchema, ...tagsGh } },
+        githubController.sharedReposV2,
+      );
+    },
+    { prefix: '/github' },
   );
 };
 

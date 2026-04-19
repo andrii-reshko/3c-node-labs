@@ -35,3 +35,4 @@ export default fp((fastify) => {
 
 export const tagsV1 = { tags: ['API v1'] };
 export const tagsV2 = { tags: ['API v2'] };
+export const tagsGh = { tags: ['Github'] };

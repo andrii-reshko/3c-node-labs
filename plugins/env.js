@@ -3,7 +3,7 @@ import fastifyEnv from '@fastify/env';
 
 const schema = {
   type: 'object',
-  required: ['PORT', 'HOSTNAME', 'NODE_ENV', 'ADMIN_API_KEY'],
+  required: ['PORT', 'HOSTNAME', 'NODE_ENV', 'ADMIN_API_KEY', 'GITHUB_TOKEN'],
   properties: {
     PORT: {
       type: 'integer',
@@ -25,6 +25,10 @@ const schema = {
     CORS_ORIGIN: {
       type: 'string',
       default: '*',
+    },
+    GITHUB_TOKEN: {
+      type: 'string',
+      default: '',
     },
   },
 };
