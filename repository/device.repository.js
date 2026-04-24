@@ -138,4 +138,26 @@ class DeviceRepository {
 
 const deviceRepository = new DeviceRepository();
 
+async function* streamAll() {
+  await ensureDir();
+  const files = await fs.readdir(DATA_DIR);
+  const jsonFiles = files.filter(
+    (f) => f.endsWith('.json') && !f.endsWith('.tmp.json'),
+  );
+
+  for (const file of jsonFiles) {
+    try {
+      const filePath = path.join(DATA_DIR, file);
+      const data = await readJsonFile(filePath);
+      yield new Device(data);
+    } catch (err) {
+      if (err instanceof SyntaxError) {
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 export default deviceRepository;
+export { streamAll };

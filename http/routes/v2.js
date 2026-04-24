@@ -23,6 +23,11 @@ const router = async (fastify) => {
         { schema: { ...exportDeviceSchema, ...tagsV2 } },
         deviceController.exportItems,
       );
+      route.get(
+        '/stream',
+        { config: { timeout: 0 }, schema: { ...tagsV2 } },
+        deviceController.streamItems,
+      );
       route.post(
         '/import',
         { schema: { ...tagsV2 } },

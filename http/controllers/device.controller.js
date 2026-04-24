@@ -241,6 +241,17 @@ const getDeviceDetails = async (request, reply) => {
   reply.send({ data: device });
 };
 
+const streamItems = async (request, reply) => {
+  reply.type('application/x-ndjson');
+
+  for await (const item of deviceService.streamAll()) {
+    const payload = JSON.stringify(item) + '\n';
+    reply.raw.write(payload);
+  }
+
+  reply.raw.end();
+};
+
 export {
   list,
   listPaginated,
@@ -251,4 +262,5 @@ export {
   importItems,
   uploadImage,
   getDeviceDetails,
+  streamItems,
 };

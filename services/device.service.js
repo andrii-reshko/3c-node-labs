@@ -1,4 +1,4 @@
-import storage from '../repository/device.repository.js';
+import storage, { streamAll } from '../repository/device.repository.js';
 import remote from '../repository/remote.repository.js';
 import Device from '../domain/device.entity.js';
 
@@ -69,4 +69,5 @@ export {
   update,
   remove,
   getDeviceWithReference,
+  streamAll,
 };
