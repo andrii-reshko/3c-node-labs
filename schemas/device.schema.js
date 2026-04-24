@@ -135,6 +135,15 @@ const importDeviceSchema = {
   required: ['device', 'status', 'room'],
 };
 
+const exportDeviceSchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      transform: { type: 'boolean', default: false },
+    },
+  },
+};
+
 export {
   createDeviceSchema,
   updateDeviceSchema,
@@ -142,4 +151,5 @@ export {
   listDeviceSchemaV1,
   removeDeviceSchema,
   importDeviceSchema,
+  exportDeviceSchema,
 };

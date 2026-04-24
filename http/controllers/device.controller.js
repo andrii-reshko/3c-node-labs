@@ -1,9 +1,13 @@
 import * as deviceService from '../../services/device.service.js';
 import MESSAGES from '../../constants/messages.js';
 import { stringify } from 'csv-stringify/sync';
+import { stringify as stringifyStream } from 'csv-stringify';
+import { pipeline } from 'stream/promises';
+import { Readable } from 'stream';
 import { parse } from 'csv-parse/sync';
 import { importDeviceSchema } from '../../schemas/device.schema.js';
 import { getImageUrl, getRelativeImagePath } from '../../utils/image.js';
+import { itemStatusTransform } from '../../transforms/itemTransform.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { Ajv } from 'ajv';
@@ -51,6 +55,7 @@ const listPaginated = async (request, reply) => {
 };
 
 const exportItems = async (request, reply) => {
+  const useTransform = request.query.transform === 'true';
   const results = await deviceService.getAll();
 
   const rows = results.map((item) => ({
@@ -63,12 +68,22 @@ const exportItems = async (request, reply) => {
     image: getImageUrl(request, item.image) || '',
   }));
 
-  const csv = stringify(rows, { header: true });
+  if (useTransform) {
+    const input = Readable.from(rows);
+    const stringifier = stringifyStream({ header: true });
 
-  reply.header('Content-Type', 'text/csv');
-  reply.header('Content-Disposition', 'attachment; filename="items.csv"');
-  reply.header('Content-Length', Buffer.byteLength(csv));
-  reply.send(csv);
+    await pipeline(input, itemStatusTransform, stringifier, reply.raw);
+
+    reply.header('Content-Type', 'text/csv');
+    reply.header('Content-Disposition', 'attachment; filename="items.csv"');
+  } else {
+    const csv = stringify(rows, { header: true });
+
+    reply.header('Content-Type', 'text/csv');
+    reply.header('Content-Disposition', 'attachment; filename="items.csv"');
+    reply.header('Content-Length', Buffer.byteLength(csv));
+    reply.send(csv);
+  }
 };
 
 const create = async (request, reply) => {

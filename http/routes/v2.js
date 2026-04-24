@@ -5,6 +5,7 @@ import {
   listDeviceSchema,
   removeDeviceSchema,
   updateDeviceSchema,
+  exportDeviceSchema,
 } from '../../schemas/device.schema.js';
 import { tagsGh, tagsV2 } from '../../plugins/apidocs.js';
 import { githubRequestSchema } from '../../schemas/github.schema.js';
@@ -19,7 +20,7 @@ const router = async (fastify) => {
       );
       route.get(
         '/export',
-        { schema: { ...tagsV2 } },
+        { schema: { ...exportDeviceSchema, ...tagsV2 } },
         deviceController.exportItems,
       );
       route.post(
