@@ -1,5 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { pipeline } from 'stream/promises';
+import { createWriteStream } from 'fs';
+import { createGzip } from 'zlib';
+import { Readable } from 'stream';
 
 const DATA_DIR = path.join(process.cwd(), 'data', 'items');
 const BACKUP_DIR = path.join(process.cwd(), 'data', 'backups');
@@ -10,25 +14,27 @@ export async function createBackup() {
   await fs.mkdir(BACKUP_DIR, { recursive: true });
 
   const files = await fs.readdir(DATA_DIR);
-  const itemsFiles = files.filter(
-    (f) => f.endsWith('.json') && !f.endsWith('.tmp.json'),
-  );
+  const itemsFiles = files
+    .filter((f) => f.endsWith('.json') && !f.startsWith('.'))
+    .sort((a, b) => a.localeCompare(b));
 
   if (itemsFiles.length === 0) {
     return null;
   }
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const backupPath = path.join(BACKUP_DIR, timestamp);
-  await fs.mkdir(backupPath, { recursive: true });
+  const backupPath = path.join(BACKUP_DIR, `${timestamp}.gz`);
 
-  await Promise.all(
-    itemsFiles.map(async (file) => {
-      const src = path.join(DATA_DIR, file);
-      const dest = path.join(backupPath, file);
-      await fs.copyFile(src, dest);
-    }),
+  const readable = Readable.from(
+    (async function* () {
+      for (const file of itemsFiles) {
+        const content = await fs.readFile(path.join(DATA_DIR, file), 'utf-8');
+        yield content + '\n';
+      }
+    })(),
   );
+
+  await pipeline(readable, createGzip(), createWriteStream(backupPath));
 
   await cleanupOldBackups();
 
@@ -36,14 +42,17 @@ export async function createBackup() {
 }
 
 async function cleanupOldBackups() {
-  const folders = await fs.readdir(BACKUP_DIR);
-  const sorted = folders.sort().reverse();
+  const files = await fs.readdir(BACKUP_DIR);
+  const gzFiles = files
+    .filter((f) => f.endsWith('.gz'))
+    .sort()
+    .reverse();
 
-  const toDelete = sorted.slice(MAX_BACKUPS);
+  const toDelete = gzFiles.slice(MAX_BACKUPS);
   await Promise.all(
-    toDelete.map(async (folder) => {
-      const folderPath = path.join(BACKUP_DIR, folder);
-      await fs.rm(folderPath, { recursive: true, force: true });
+    toDelete.map(async (file) => {
+      const filePath = path.join(BACKUP_DIR, file);
+      await fs.unlink(filePath);
     }),
   );
 
