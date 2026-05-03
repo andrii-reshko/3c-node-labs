@@ -1,3 +1,4 @@
+import * as backupController from '../controllers/backup.controller.js';
 import * as deviceController from '../controllers/device.controller.js';
 import * as healthController from '../controllers/health.controller.js';
 import * as githubController from '../controllers/github.controller.js';
@@ -94,6 +95,30 @@ async function routes(fastify) {
       );
     },
     { prefix: '/github' },
+  );
+
+  fastify.register(
+    async (route) => {
+      route.get(
+        '/:timestamp',
+        {
+          schema: {
+            tags: ['Backups'],
+            security: [{ apiKey: [] }],
+            params: {
+              type: 'object',
+              properties: {
+                timestamp: { type: 'string' },
+              },
+              required: ['timestamp'],
+            },
+          },
+          onRequest: requiresApiKey,
+        },
+        backupController.getBackup,
+      );
+    },
+    { prefix: '/backups' },
   );
 }
 
