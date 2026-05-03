@@ -5,6 +5,7 @@ import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import rateLimit from '@fastify/rate-limit';
+import fastifyWebSocket from '@fastify/websocket';
 import env from './plugins/env.js';
 import apiDocs from './plugins/apidocs.js';
 import { v1, v2 } from './http/routes/index.js';
@@ -12,6 +13,7 @@ import { errorHandler } from './utils/errorHandler.js';
 import { createBackup } from './utils/backup.js';
 import { getModelHash } from './migrations/migrate.js';
 import { readJsonFile } from './utils/filesystem.js';
+import handleConnection from './http/socket/device.socket.js';
 import path from 'path';
 
 // eslint-disable-next-line no-process-env
@@ -55,9 +57,12 @@ fastify.register(cors, {
 });
 
 fastify.setErrorHandler(errorHandler);
-fastify.register(apiDocs);
-fastify.register(v1, { prefix: '/api/v1' });
-fastify.register(v2, { prefix: '/api/v2' });
+await fastify.register(apiDocs);
+await fastify.register(fastifyWebSocket);
+await fastify.register(v1, { prefix: '/api/v1' });
+await fastify.register(v2, { prefix: '/api/v2' });
+
+fastify.get('/ws', { websocket: true }, handleConnection);
 
 const backup = await createBackup();
 if (backup) {

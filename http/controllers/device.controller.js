@@ -1,4 +1,5 @@
 import * as deviceService from '../../services/device.service.js';
+import deviceBus from '../../utils/deviceBus.js';
 import MESSAGES from '../../constants/messages.js';
 import { stringify } from 'csv-stringify/sync';
 import { stringify as stringifyStream } from 'csv-stringify';
@@ -91,6 +92,7 @@ const create = async (request, reply) => {
 
   try {
     const instance = await deviceService.create(data);
+    deviceBus.emit('created', instance);
     reply.code(201).send({ data: instance });
   } catch (err) {
     reply.unprocessableEntity(err.message);
@@ -104,6 +106,7 @@ const update = async (request, reply) => {
   try {
     const updated = await deviceService.update(id, updates);
     if (updated) {
+      deviceBus.emit('updated', updated);
       reply.send({ data: updated });
     } else {
       reply.notFound(MESSAGES.DEVICE_NOT_FOUND);
@@ -118,6 +121,7 @@ const remove = async (request, reply) => {
   try {
     const removed = await deviceService.remove(id);
     if (removed === true) {
+      deviceBus.emit('deleted', id);
       reply.code(204).send();
     } else {
       reply.notFound(MESSAGES.DEVICE_NOT_FOUND);
