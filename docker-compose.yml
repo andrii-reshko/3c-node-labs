@@ -1,17 +1,4 @@
 services:
-  mongo:
-    image: mongo:7
-    container_name: labs-mongo
-    restart: unless-stopped
-    ports:
-      - '27017:27017'
-    volumes:
-      - mongo_data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: ${MONGO_DB}
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-
   mysql:
     image: mariadb:11
     container_name: labs-mysql
@@ -27,5 +14,4 @@ services:
       MARIADB_ROOT_PASSWORD: ${MYSQL_PASSWORD}
 
 volumes:
-  mongo_data:
   mysql_data:

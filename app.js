@@ -7,7 +7,6 @@ import fastifyStatic from '@fastify/static';
 import rateLimit from '@fastify/rate-limit';
 import fastifyWebSocket from '@fastify/websocket';
 import env from './plugins/env.js';
-import mongo from './db/mongo.js';
 import mysql from './db/mysql.js';
 import drizzle from './db/drizzle.js';
 import deviceService from './services/device.service.js';
@@ -34,7 +33,6 @@ const fastify = Fastify({
 });
 
 await fastify.register(env);
-await fastify.register(mongo);
 await fastify.register(mysql);
 await fastify.register(drizzle);
 await fastify.register(deviceService);

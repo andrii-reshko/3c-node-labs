@@ -9,11 +9,6 @@ const schema = {
     'NODE_ENV',
     'ADMIN_API_KEY',
     'GITHUB_TOKEN',
-    'MONGO_HOST',
-    'MONGO_PORT',
-    'MONGO_DB',
-    'MONGO_USER',
-    'MONGO_PASSWORD',
     'MYSQL_HOST',
     'MYSQL_PORT',
     'MYSQL_DB',
@@ -45,27 +40,6 @@ const schema = {
     GITHUB_TOKEN: {
       type: 'string',
       default: '',
-    },
-    MONGO_HOST: {
-      type: 'string',
-      minLength: 1,
-    },
-    MONGO_PORT: {
-      type: 'integer',
-      minimum: 1,
-      maximum: 65535,
-    },
-    MONGO_DB: {
-      type: 'string',
-      minLength: 1,
-    },
-    MONGO_USER: {
-      type: 'string',
-      minLength: 1,
-    },
-    MONGO_PASSWORD: {
-      type: 'string',
-      minLength: 1,
     },
     MYSQL_HOST: {
       type: 'string',
