@@ -15,7 +15,7 @@ const deviceProps = {
 const deviceResponseSchema = {
   type: 'object',
   properties: {
-    id: { type: 'integer' },
+    id: { type: 'string' },
     device: { type: 'string' },
     status: { type: 'string' },
     room: { type: 'string' },
@@ -45,7 +45,7 @@ const updateDeviceSchema = {
   params: {
     type: 'object',
     properties: {
-      id: { type: 'integer' },
+      id: { type: 'string' },
     },
     required: ['id'],
   },
@@ -119,7 +119,7 @@ const removeDeviceSchema = {
   params: {
     type: 'object',
     properties: {
-      id: { type: 'integer' },
+      id: { type: 'string' },
     },
     required: ['id'],
   },

@@ -1,4 +1,3 @@
-import * as deviceService from '../../services/device.service.js';
 import deviceBus from '../../utils/deviceBus.js';
 import MESSAGES from '../../constants/messages.js';
 import { stringify } from 'csv-stringify/sync';
@@ -15,7 +14,7 @@ import { Ajv } from 'ajv';
 
 const list = async (request, reply) => {
   const roomFilter = request.query.room;
-  const results = await deviceService.getAll(roomFilter);
+  const results = await request.server.deviceService.getAll(roomFilter);
 
   const data = results.map((item) => ({
     ...item,
@@ -33,7 +32,7 @@ const listPaginated = async (request, reply) => {
   const limit = parseInt(request.query.limit) || 10;
   const roomFilter = request.query.room;
 
-  const { data, total } = await deviceService.getAllPaginated(
+  const { data, total } = await request.server.deviceService.getAllPaginated(
     page,
     limit,
     roomFilter,
@@ -57,7 +56,7 @@ const listPaginated = async (request, reply) => {
 
 const exportItems = async (request, reply) => {
   const useTransform = request.query.transform === 'true';
-  const results = await deviceService.getAll();
+  const results = await request.server.deviceService.getAll();
 
   const rows = results.map((item) => ({
     id: item.id,
@@ -91,7 +90,7 @@ const create = async (request, reply) => {
   const data = request.body;
 
   try {
-    const instance = await deviceService.create(data);
+    const instance = await request.server.deviceService.create(data);
     deviceBus.emit('created', instance);
     reply.code(201).send({ data: instance });
   } catch (err) {
@@ -104,7 +103,7 @@ const update = async (request, reply) => {
   const updates = request.body;
 
   try {
-    const updated = await deviceService.update(id, updates);
+    const updated = await request.server.deviceService.update(id, updates);
     if (updated) {
       deviceBus.emit('updated', updated);
       reply.send({ data: updated });
@@ -119,7 +118,7 @@ const update = async (request, reply) => {
 const remove = async (request, reply) => {
   const id = request.params.id;
   try {
-    const removed = await deviceService.remove(id);
+    const removed = await request.server.deviceService.remove(id);
     if (removed === true) {
       deviceBus.emit('deleted', id);
       reply.code(204).send();
@@ -155,7 +154,7 @@ const uploadImage = async (request, reply) => {
   await fs.writeFile(uploadPath, buffer);
 
   const relativePath = getRelativeImagePath(id, ext);
-  await deviceService.update(id, { image: relativePath });
+  await request.server.deviceService.update(id, { image: relativePath });
 
   reply.send({
     data: { image: relativePath, url: getImageUrl(request, relativePath) },
@@ -205,9 +204,7 @@ const importItems = async (request, reply) => {
         record.enabled === '1';
     }
 
-    // fix: unset id to avoid conflicts with existing items
     delete record.id;
-    console.log(record);
 
     const valid = validate(record);
     if (!valid) {
@@ -217,7 +214,7 @@ const importItems = async (request, reply) => {
       });
     } else {
       try {
-        const created = await deviceService.create(record);
+        const created = await request.server.deviceService.create(record);
         imported.push(created);
       } catch (err) {
         rejected.push({
@@ -237,7 +234,7 @@ const importItems = async (request, reply) => {
 
 const getDeviceDetails = async (request, reply) => {
   const id = request.params.id;
-  const device = await deviceService.getDeviceWithReference(id);
+  const device = await request.server.deviceService.getDeviceWithReference(id);
   if (!device) {
     return reply.notFound('Device not found');
   }
@@ -248,7 +245,7 @@ const getDeviceDetails = async (request, reply) => {
 const streamItems = async (request, reply) => {
   reply.type('application/x-ndjson');
 
-  for await (const item of deviceService.streamAll()) {
+  for await (const item of request.server.deviceService.streamAll()) {
     const payload = JSON.stringify(item) + '\n';
     reply.raw.write(payload);
   }

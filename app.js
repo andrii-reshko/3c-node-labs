@@ -8,6 +8,7 @@ import rateLimit from '@fastify/rate-limit';
 import fastifyWebSocket from '@fastify/websocket';
 import env from './plugins/env.js';
 import mongo from './db/mongo.js';
+import deviceService from './services/device.service.js';
 import apiDocs from './plugins/apidocs.js';
 import { v1, v2 } from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
@@ -35,6 +36,7 @@ const fastify = Fastify({
 
 await fastify.register(env);
 await fastify.register(mongo);
+await fastify.register(deviceService);
 fastify.register(rateLimit, {
   max: 100,
   timeWindow: '1 minute',

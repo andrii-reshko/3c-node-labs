@@ -23,4 +23,6 @@ async function mongoPlugin(fastify) {
   });
 }
 
-export default fp(mongoPlugin);
+export default fp(mongoPlugin, {
+  name: 'mongo',
+});

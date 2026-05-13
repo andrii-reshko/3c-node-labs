@@ -23,7 +23,7 @@ class Device {
       throw new Error('Room is required and must be a string');
     }
 
-    this.id = merged.id;
+    this.id = merged.id?.toString() || null;
     this.device = merged.device;
     this.status = merged.status;
     this.room = merged.room;
