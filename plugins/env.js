@@ -14,6 +14,11 @@ const schema = {
     'MONGO_DB',
     'MONGO_USER',
     'MONGO_PASSWORD',
+    'MYSQL_HOST',
+    'MYSQL_PORT',
+    'MYSQL_DB',
+    'MYSQL_USER',
+    'MYSQL_PASSWORD',
   ],
   properties: {
     PORT: {
@@ -59,6 +64,27 @@ const schema = {
       minLength: 1,
     },
     MONGO_PASSWORD: {
+      type: 'string',
+      minLength: 1,
+    },
+    MYSQL_HOST: {
+      type: 'string',
+      minLength: 1,
+    },
+    MYSQL_PORT: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 65535,
+    },
+    MYSQL_DB: {
+      type: 'string',
+      minLength: 1,
+    },
+    MYSQL_USER: {
+      type: 'string',
+      minLength: 1,
+    },
+    MYSQL_PASSWORD: {
       type: 'string',
       minLength: 1,
     },

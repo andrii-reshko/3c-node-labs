@@ -1,10 +1,9 @@
 import fp from 'fastify-plugin';
 import { createDeviceRepository } from '../repository/device.repository.js';
 import remote from '../repository/remote.repository.js';
-import Device from '../domain/device.entity.js';
 
 async function deviceServicePlugin(fastify) {
-  const storage = createDeviceRepository();
+  const storage = createDeviceRepository(fastify.mysql);
 
   const getAll = async (filter) => {
     return await storage.findAll(filter);
@@ -19,19 +18,13 @@ async function deviceServicePlugin(fastify) {
   };
 
   const create = async (data) => {
-    const deviceEntity = new Device(data);
-    return await storage.create(deviceEntity);
+    return await storage.create(data);
   };
 
   const update = async (id, data) => {
     const existing = await storage.findById(id);
     if (!existing) return undefined;
-    const updatedData = {
-      ...existing,
-      ...data,
-    };
-    const deviceEntity = new Device(updatedData);
-    return await storage.update(id, deviceEntity);
+    return await storage.update(id, data);
   };
 
   const remove = async (id) => {
@@ -80,5 +73,5 @@ async function deviceServicePlugin(fastify) {
 }
 
 export default fp(deviceServicePlugin, {
-  dependencies: ['mongo'],
+  dependencies: ['mysql'],
 });

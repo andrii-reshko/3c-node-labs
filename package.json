@@ -9,6 +9,8 @@
     "dev": "node --watch --env-file=.env app.js",
     "seed": "node scripts/seed.js",
     "seed:force": "node scripts/seed.js --force",
+    "mysql:seed": "node scripts/mysql.seed.js",
+    "mysql:seed:force": "node scripts/mysql.seed.js --force",
     "migrate": "node migrations/migrate.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -50,6 +52,7 @@
     "dotenv": "^17.4.2",
     "fastify": "^5.8.2",
     "fastify-plugin": "^5.1.0",
-    "mongoose": "^9.6.2"
+    "mongoose": "^9.6.2",
+    "mysql2": "^3.22.3"
   }
 }

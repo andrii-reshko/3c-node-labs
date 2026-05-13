@@ -8,13 +8,12 @@ import rateLimit from '@fastify/rate-limit';
 import fastifyWebSocket from '@fastify/websocket';
 import env from './plugins/env.js';
 import mongo from './db/mongo.js';
+import mysql from './db/mysql.js';
 import deviceService from './services/device.service.js';
 import apiDocs from './plugins/apidocs.js';
 import { v1, v2 } from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
-import { createBackup } from './utils/backup.js';
 import { getModelHash } from './migrations/migrate.js';
-import { readJsonFile } from './utils/filesystem.js';
 import handleConnection from './http/socket/device.socket.js';
 import path from 'path';
 
@@ -36,6 +35,7 @@ const fastify = Fastify({
 
 await fastify.register(env);
 await fastify.register(mongo);
+await fastify.register(mysql);
 await fastify.register(deviceService);
 fastify.register(rateLimit, {
   max: 100,
@@ -68,22 +68,14 @@ await fastify.register(v2, { prefix: '/api/v2' });
 
 fastify.get('/ws', { websocket: true }, handleConnection);
 
-const backup = await createBackup();
-if (backup) {
-  console.log(`Backup created: ${backup.timestamp}`);
-}
-
 const currentHash = getModelHash();
-const versionFile = path.join(process.cwd(), 'data', 'version.json');
-try {
-  const { hash } = await readJsonFile(versionFile);
-  if (hash !== currentHash) {
-    fastify.log.warn('Schema changed. Run "npm run migrate" to update.');
-  }
-} catch (err) {
-  if (err.code !== 'ENOENT') {
-    fastify.log.warn('Could not read version file');
-  }
+const [rows] = await fastify.mysql.query(
+  'SELECT hash FROM migrations WHERE name = ?',
+  ['devices'],
+);
+const storedHash = rows[0]?.hash;
+if (storedHash && storedHash !== currentHash) {
+  fastify.log.warn('Schema changed. Run "npm run migrate" to update.');
 }
 
 // Log server closure

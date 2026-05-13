@@ -12,5 +12,20 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
 
+  mysql:
+    image: mariadb:11
+    container_name: labs-mysql
+    restart: unless-stopped
+    ports:
+      - '13306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MARIADB_DATABASE: ${MYSQL_DB}
+      MARIADB_USER: ${MYSQL_USER}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+
 volumes:
   mongo_data:
+  mysql_data:
