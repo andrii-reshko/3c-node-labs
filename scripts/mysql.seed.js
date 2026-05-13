@@ -1,6 +1,7 @@
+import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import 'dotenv/config';
-import { migrate } from '../migrations/migrate.js';
+import { devices } from '../db/schema.js';
 
 const INITIAL_DATA = [
   { device: 'Smart Lamp', status: 'on', room: 'Kitchen' },
@@ -31,25 +32,22 @@ async function seed() {
   const isForce = process.argv.includes('--force');
 
   const pool = await connect();
-  await migrate(pool);
+  const db = drizzle(pool, { mode: 'default' });
 
   if (isForce) {
-    await pool.query('DELETE FROM devices');
+    await db.delete(devices);
     console.log('Database cleared');
   }
 
-  const [rows] = await pool.query('SELECT COUNT(*) as count FROM devices');
-  if (rows[0].count > 0) {
+  const count = await db.select({ count: devices.id }).from(devices);
+  if (count.length > 0) {
     console.log('Database already has data. Run with --force to reseed.');
     await pool.end();
     return;
   }
 
   for (const item of INITIAL_DATA) {
-    await pool.query(
-      'INSERT INTO devices (device, status, room) VALUES (?, ?, ?)',
-      [item.device, item.status, item.room],
-    );
+    await db.insert(devices).values(item);
   }
   console.log(`Seeded ${INITIAL_DATA.length} devices`);
   await pool.end();

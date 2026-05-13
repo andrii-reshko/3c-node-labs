@@ -3,7 +3,7 @@ import { createDeviceRepository } from '../repository/device.repository.js';
 import remote from '../repository/remote.repository.js';
 
 async function deviceServicePlugin(fastify) {
-  const storage = createDeviceRepository(fastify.mysql);
+  const storage = createDeviceRepository(fastify.drizzle);
 
   const getAll = async (filter) => {
     return await storage.findAll(filter);
@@ -73,5 +73,5 @@ async function deviceServicePlugin(fastify) {
 }
 
 export default fp(deviceServicePlugin, {
-  dependencies: ['mysql'],
+  dependencies: ['drizzle'],
 });

@@ -9,11 +9,11 @@ import fastifyWebSocket from '@fastify/websocket';
 import env from './plugins/env.js';
 import mongo from './db/mongo.js';
 import mysql from './db/mysql.js';
+import drizzle from './db/drizzle.js';
 import deviceService from './services/device.service.js';
 import apiDocs from './plugins/apidocs.js';
 import { v1, v2 } from './http/routes/index.js';
 import { errorHandler } from './utils/errorHandler.js';
-import { getModelHash } from './migrations/migrate.js';
 import handleConnection from './http/socket/device.socket.js';
 import path from 'path';
 
@@ -36,6 +36,7 @@ const fastify = Fastify({
 await fastify.register(env);
 await fastify.register(mongo);
 await fastify.register(mysql);
+await fastify.register(drizzle);
 await fastify.register(deviceService);
 fastify.register(rateLimit, {
   max: 100,
@@ -52,8 +53,6 @@ fastify.register(fastifyStatic, {
   prefix: '/',
 });
 
-// To test CORS in production, set NODE_ENV=production and CORS_ORIGIN=http://example.com in .env
-// Then run: curl -v -H "Origin: http://example.com" -X OPTIONS http://localhost:3001/health
 fastify.register(cors, {
   origin: isDev ? '*' : fastify.config.CORS_ORIGIN,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -68,17 +67,6 @@ await fastify.register(v2, { prefix: '/api/v2' });
 
 fastify.get('/ws', { websocket: true }, handleConnection);
 
-const currentHash = getModelHash();
-const [rows] = await fastify.mysql.query(
-  'SELECT hash FROM migrations WHERE name = ?',
-  ['devices'],
-);
-const storedHash = rows[0]?.hash;
-if (storedHash && storedHash !== currentHash) {
-  fastify.log.warn('Schema changed. Run "npm run migrate" to update.');
-}
-
-// Log server closure
 fastify.addHook('onClose', (instance, done) => {
   instance.log.info('Server closed');
   done();
@@ -97,7 +85,6 @@ fastify.listen(
   },
 );
 
-// Graceful Shutdown
 const gracefulShutdown = (signal) => {
   fastify.log.info(`${signal} received. shutting down gracefully`);
   fastify
@@ -110,24 +97,20 @@ const gracefulShutdown = (signal) => {
       process.exit(1);
     });
 
-  // force shutdown by timeout
   setTimeout(() => {
     fastify.log.error('Forcefully shutting down');
     process.exit(1);
   }, 5000);
 };
 
-// Handle termination signals
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-// Handle global uncaught exceptions
 process.on('uncaughtException', (err, origin) => {
   fastify.log.error(`Uncaught at ${origin}, error: ${err.stack || err}`);
   gracefulShutdown('uncaughtException');
 });
 
-// Handle global unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   fastify.log.error(
     `rejection at ${promise}, reason: ${reason.stack || reason}`,
